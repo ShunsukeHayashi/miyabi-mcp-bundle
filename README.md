@@ -6,6 +6,7 @@
 
 [![npm version](https://img.shields.io/npm/v/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
 [![npm downloads](https://img.shields.io/npm/dm/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
+[![CI](https://img.shields.io/github/actions/workflow/status/ShunsukeHayashi/miyabi-mcp-bundle/ci.yml?style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/ShunsukeHayashi/miyabi-mcp-bundle/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&logo=github&logoColor=white&color=181717)](https://github.com/ShunsukeHayashi/miyabi-mcp-bundle)
 [![License](https://img.shields.io/github/license/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&color=blue)](LICENSE)
 
