@@ -13,7 +13,7 @@
  * - Claude Code Monitor (8 tools)
  * - GitHub Integration (18 tools)
  *
- * @version 3.0.0
+ * @version 3.1.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -1107,7 +1107,7 @@ async function handleHealthCheck(): Promise<unknown> {
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.0.0',
+    version: '3.1.0',
   },
   {
     capabilities: {
@@ -1135,9 +1135,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  console.error('🚀 Miyabi MCP Bundle v3.0.0');
-  console.error(`📂 Repository: ${MIYABI_REPO_PATH}`);
-  console.error(`🔧 Tools: ${tools.length}`);
+  console.error('');
+  console.error('┌────────────────────────────────────────────────┐');
+  console.error('│  🌸 Miyabi MCP Bundle v3.1.0                   │');
+  console.error('│  The Most Comprehensive MCP Server             │');
+  console.error('├────────────────────────────────────────────────┤');
+  console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);
+  console.error(`│  🔧 Tools: ${String(tools.length).padEnd(35)} │`);
+  console.error(`│  🔐 Security: Enterprise-grade                 │`);
+  console.error('└────────────────────────────────────────────────┘');
   console.error('');
 
   const transport = new StdioServerTransport();

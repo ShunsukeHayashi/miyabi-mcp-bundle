@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2025-12-15
+
+### Added
+- **🚀 Onboarding Flow** - Interactive CLI for easy setup
+  - `miyabi-mcp init` - Setup wizard that generates Claude Desktop config
+  - `miyabi-mcp doctor` - Diagnose setup issues
+  - `miyabi-mcp info` - Show system information
+  - Beautiful ASCII banner with color support
+- **Improved Server Startup** - Enhanced welcome message with box drawing
+
+### Changed
+- CLI now defaults to `miyabi-mcp` command with subcommands
+- Separate `miyabi-mcp-server` command for direct server start
+
 ## [3.0.0] - 2025-12-15
 
 ### Added

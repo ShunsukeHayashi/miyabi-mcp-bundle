@@ -1,12 +1,13 @@
 {
   "name": "miyabi-mcp-bundle",
-  "version": "3.0.0",
-  "description": "🚀 The Ultimate All-in-One MCP Server - 100+ tools for Claude Desktop & AI Agents. Git, GitHub, System Monitoring, Tmux, Logs, Network, Process, File, and more! Enterprise-grade security with input sanitization.",
+  "version": "3.1.0",
+  "description": "🚀 The Ultimate All-in-One MCP Server - 102 tools for Claude Desktop & AI Agents. Git, GitHub, System Monitoring, Tmux, Logs, Network, Process, File, and more! Enterprise-grade security with input sanitization.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "miyabi-mcp": "dist/index.js"
+    "miyabi-mcp": "dist/cli.js",
+    "miyabi-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

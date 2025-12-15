@@ -102,19 +102,49 @@ Comprehensive system health validation and diagnostics.
 ### Quick Start (Recommended)
 
 ```bash
-npx miyabi-mcp-bundle
+# Interactive setup wizard (generates Claude Desktop config automatically)
+npx miyabi-mcp-bundle init
 ```
 
 ### Global Installation
 
 ```bash
 npm install -g miyabi-mcp-bundle
-miyabi-mcp
+
+# Run the setup wizard
+miyabi-mcp init
+
+# Or diagnose your setup
+miyabi-mcp doctor
 ```
+
+### CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `miyabi-mcp init` | 🚀 Interactive setup wizard |
+| `miyabi-mcp doctor` | 🔍 Diagnose setup issues |
+| `miyabi-mcp info` | ℹ️ Show system information |
+| `miyabi-mcp --help` | 📖 Show help |
+| `miyabi-mcp` | ▶️ Start MCP server |
 
 ---
 
 ## ⚙️ Claude Desktop Setup
+
+### Option 1: Automatic Setup (Recommended)
+
+```bash
+npx miyabi-mcp-bundle init
+```
+
+The setup wizard will:
+1. Check prerequisites (Node.js, npm, git)
+2. Ask for your repository path
+3. Optionally configure GitHub token
+4. Generate Claude Desktop configuration automatically
+
+### Option 2: Manual Setup
 
 Add to your Claude Desktop configuration:
 
