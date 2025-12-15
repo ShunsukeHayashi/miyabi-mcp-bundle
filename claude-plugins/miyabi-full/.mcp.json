@@ -1,0 +1,156 @@
+{
+  "mcpServers": {
+    "//": "=== Core Servers (Always Enabled) ===",
+
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "disabled": false,
+      "description": "Filesystem access for project files"
+    },
+
+    "miyabi": {
+      "command": "/Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/target/release/miyabi-mcp-server",
+      "args": [
+        "--repo-owner", "customer-cloud",
+        "--repo-name", "miyabi-private",
+        "--github-token", "${GITHUB_TOKEN}"
+      ],
+      "env": {
+        "RUST_LOG": "miyabi_mcp_server=info,miyabi_agents=debug"
+      },
+      "disabled": false,
+      "description": "Miyabi Rust MCP Server - Agent execution via JSON-RPC 2.0"
+    },
+
+    "miyabi-legacy": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/miyabi-integration.js"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+        "REPOSITORY": "${REPOSITORY}"
+      },
+      "disabled": true,
+      "description": "[Legacy] Node.js版 Miyabi統合 (deprecated, use Rust version)"
+    },
+
+    "github-enhanced": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/github-enhanced.cjs"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+        "REPOSITORY": "${REPOSITORY}"
+      },
+      "disabled": false,
+      "description": "Enhanced GitHub operations for Issue/PR management"
+    },
+
+    "project-context": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/project-context.cjs"
+      ],
+      "disabled": false,
+      "description": "Project-specific context and dependency information"
+    },
+
+    "//": "=== Development Servers (Enable when developing) ===",
+
+    "ide-integration": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/ide-integration.cjs"
+      ],
+      "disabled": false,
+      "description": "VS Code diagnostics and Jupyter execution integration"
+    },
+
+    "//": "=== Optional Servers (Enable as needed) ===",
+
+    "context-engineering": {
+      "command": "node",
+      "args": [
+        "external/context-engineering-mcp/mcp-server/index.js"
+      ],
+      "env": {
+        "AI_GUIDES_API_URL": "http://localhost:8888"
+      },
+      "disabled": false,
+      "description": "Context Engineering - AI-powered context analysis (requires external API)"
+    },
+
+    "gemini-image-generation": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/image-generation.js"
+      ],
+      "env": {
+        "GOOGLE_API_KEY": "${GOOGLE_API_KEY}"
+      },
+      "disabled": false,
+      "description": "Gemini 2.5 Flash Image - テキストから画像生成（note.com記事用）"
+    },
+
+    "discord-community": {
+      "command": "node",
+      "args": [
+        ".claude/mcp-servers/discord-integration.js"
+      ],
+      "env": {
+        "DISCORD_BOT_TOKEN": "${DISCORD_BOT_TOKEN}",
+        "DISCORD_GUILD_ID": "${DISCORD_GUILD_ID}",
+        "DISCORD_ANNOUNCE_CHANNEL": "${DISCORD_ANNOUNCE_CHANNEL}",
+        "DISCORD_GITHUB_CHANNEL": "${DISCORD_GITHUB_CHANNEL}",
+        "DISCORD_SUPPORT_JP_CHANNEL": "${DISCORD_SUPPORT_JP_CHANNEL}",
+        "DISCORD_SUPPORT_EN_CHANNEL": "${DISCORD_SUPPORT_EN_CHANNEL}"
+      },
+      "disabled": false,
+      "description": "Miyabi Discord community management - subproject for community operations"
+    },
+
+    "lark-openapi": {
+      "command": "node",
+      "args": [
+        "mcp-servers/lark-openapi-mcp-enhanced/dist/cli.js",
+        "mcp",
+        "--mode",
+        "stdio",
+        "--app-id",
+        "cli_a8d2fdb1f1f8d02d",
+        "--app-secret",
+        "V7mzILXEgIaqLwLXtyZstekRJsjRsFfJ",
+        "--tools",
+        "bitable_v1_app_get,bitable_v1_app_create,bitable_v1_app_copy,bitable_v1_appTable_list,bitable_v1_appTable_create,bitable_v1_appTableField_list,bitable_v1_appTableField_create,bitable_v1_appTableRecord_list,bitable_v1_appTableRecord_get,bitable_v1_appTableRecord_create,bitable_v1_appTableRecord_batchCreate,bitable_v1_appTableRecord_update,bitable_v1_appTableRecord_batchUpdate,bitable_v1_appTableRecord_delete,bitable_v1_appTableRecord_batchDelete,bitable_v1_appTableRecord_search,bitable_v1_appTableView_list,im_v1_message_create,im_v1_message_list,im_v1_chat_create,im_v1_chat_list,im_v1_chatMembers_get"
+      ],
+      "disabled": false,
+      "description": "Lark OpenAPI MCP - Bitable/Base + IM tools (optimized selection)"
+    },
+
+    "miyabi-tmux": {
+      "command": "node",
+      "args": [
+        "mcp-servers/miyabi-tmux-server/dist/index.js"
+      ],
+      "disabled": false,
+      "description": "Miyabi tmux MCP Server - Multithread communication aggregation & CommHub"
+    },
+
+    "gemini3-image-gen": {
+      "command": "node",
+      "args": ["mcp-servers/gemini3-image-gen/dist/simple-server.js"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      },
+      "disabled": false,
+      "description": "Gemini 3 Pro Preview (Nano Banana Pro) image generation"
+    }
+  }
+}

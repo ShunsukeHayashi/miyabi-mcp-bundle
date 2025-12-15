@@ -1,0 +1,131 @@
+{
+  "sessionEnd": {
+    "description": "Session end hook for Miyabi Orchestra - Auto-report to Conductor",
+    "enabled": true,
+    "command": "bash",
+    "args": [
+      "-c",
+      "source /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi_hooks.sh && miyabi_session_end_report"
+    ]
+  },
+  "sessionStart": {
+    "description": "Session start hook - Priority check and guidance",
+    "enabled": true,
+    "command": "bash",
+    "args": [
+      "-c",
+      "/Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --verbose || echo '\\n📋 上記の優先タスクから開始してください'"
+    ]
+  },
+  "taskComplete": {
+    "description": "Task completion hook - Auto PUSH report and re-check priority",
+    "enabled": true,
+    "command": "bash",
+    "args": [
+      "-c",
+      "source /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi_hooks.sh && miyabi_task_complete \"$1\" \"$2\" && /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --json > /tmp/miyabi-priority-status.json"
+    ]
+  },
+  "PostToolCall": [
+    {
+      "description": "VOICEVOX ナレーション - ツール実行後にやさしく解説 (デフォルトON)",
+      "enabled": true,
+      "matcher": {},
+      "command": "bash",
+      "args": [
+        "-c",
+        "/Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/voicevox-narrator.sh \"$TOOL_NAME\" \"$TOOL_INPUT\" \"$TOOL_OUTPUT\""
+      ]
+    },
+    {
+      "description": "Git作業ログ自動収集 - コミット・プッシュ・PR検出",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "bash /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/git_work_logger.sh detect Bash \"$TOOL_INPUT\""
+      ]
+    },
+    {
+      "description": "PRマージ後の優先順位再チェック",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash",
+        "tool_input": "gh pr merge"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo '\\n✅ PRマージ完了。次の優先タスクを確認中...' && sleep 2 && /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --verbose"
+      ]
+    },
+    {
+      "description": "Issue完了時の優先順位再チェック",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash",
+        "tool_input": "gh issue close"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo '\\n✅ Issue完了。次の優先タスクを確認中...' && /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --verbose"
+      ]
+    }
+  ],
+  "PreToolCall": [
+    {
+      "description": "Git checkout検出 - 作業開始宣言",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "if echo \"$TOOL_INPUT\" | grep -q 'git checkout -b\\|git switch -c'; then osascript -e 'display notification \"新ブランチ作成中...\" with title \"Miyabi Git Logger\"' 2>/dev/null; fi"
+      ]
+    },
+    {
+      "description": "Worktree作成前の優先順位強制チェック",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash",
+        "tool_input": "git worktree add"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "/Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --enforce || (echo '\\n❌ 優先タスクが残っています。先に完了してください。\\n📋 実行: miyabi-priority-check --verbose' && exit 1)"
+      ]
+    },
+    {
+      "description": "新規Issue作業開始前の優先順位チェック",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Bash",
+        "tool_input": "gh issue create"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo '\\n⚠️ 新規Issue作成前に優先順位を確認...' && /Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh"
+      ]
+    },
+    {
+      "description": "Task Tool使用前の優先順位チェック (Sub-agent起動時)",
+      "enabled": true,
+      "matcher": {
+        "tool_name": "Task"
+      },
+      "command": "bash",
+      "args": [
+        "-c",
+        "/Users/shunsuke/Dev/01-miyabi/_core/miyabi-private/scripts/miyabi-priority-check.sh --json > /tmp/miyabi-current-priority.json && cat /tmp/miyabi-current-priority.json | jq -r '.action_required' | grep -v 'technical_debt' && echo '\\n⚠️ 優先タスクがあります。先に対応してください。' || true"
+      ]
+    }
+  ]
+}

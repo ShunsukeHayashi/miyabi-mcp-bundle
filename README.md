@@ -15,9 +15,9 @@
 
 <br />
 
-**75+ Tools** · **9 Categories** · **Zero Config** · **Production Ready**
+**76 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
-[Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [日本語](#-日本語)
+[Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [Plugins](#-plugins) · [日本語](#-日本語)
 
 <br />
 
@@ -50,8 +50,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **One Server, 75+ Tools**
-No more juggling multiple MCP servers. Miyabi bundles everything into one elegant package.
+### 🎯 **Complete AI Development Platform**
+76 MCP Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks in one package.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -305,6 +305,118 @@ After configuration, try these commands in Claude Desktop:
 
 ---
 
+## 🔌 Plugins
+
+<div align="center">
+
+### Included Claude Code Plugins (v2.0.0)
+
+</div>
+
+This package includes the complete Miyabi plugin ecosystem:
+
+<details open>
+<summary><h3>🤖 38 AI Agents</h3></summary>
+
+| Agent | Description |
+|:------|:------------|
+| `coordinator-agent` | Multi-agent orchestration and task distribution |
+| `codegen-agent` | AI-driven code generation (Rust, TypeScript, Python) |
+| `pr-agent` | Pull request creation and management |
+| `review-agent` | Code review automation |
+| `issue-agent` | GitHub issue analysis and triage |
+| `deployment-agent` | CI/CD and deployment automation |
+| `analytics-agent` | Data analysis and visualization |
+| `honoka-agent` | Udemy course creation specialist |
+| `marketing-agent` | Marketing strategy and content |
+| `crm-agent` | Customer relationship management |
+| `jonathan-ive-design-agent` | UI/UX design with Apple design principles |
+| `lp-gen-agent` | Landing page generation |
+| `narration-agent` | Voice narration and script writing |
+| ... and 25 more agents |
+
+</details>
+
+<details>
+<summary><h3>🎯 22 Development Skills</h3></summary>
+
+| Skill | Description |
+|:------|:------------|
+| `rust-development` | Rust build, test, clippy, fmt workflow |
+| `git-workflow` | Conventional commits and PR workflow |
+| `tdd-workflow` | Test-driven development patterns |
+| `security-audit` | Security scanning and vulnerability checks |
+| `performance-analysis` | Profiling and optimization |
+| `debugging-troubleshooting` | Error diagnosis and resolution |
+| `documentation-generation` | Auto-generate docs from code |
+| `project-setup` | New project scaffolding |
+| `dependency-management` | Package updates and auditing |
+| `context-eng` | Context window optimization |
+| `issue-analysis` | Issue triage and prioritization |
+| `voicevox` | Japanese voice synthesis |
+| `tmux-iterm-integration` | Terminal session management |
+| `paper2agent` | Research paper to agent conversion |
+| `business-strategy-planning` | Business analysis workflows |
+| `sales-crm-management` | Sales pipeline automation |
+| `market-research-analysis` | Competitive analysis |
+| `content-marketing-strategy` | Content planning |
+| `growth-analytics-dashboard` | Growth metrics tracking |
+| `agent-execution` | Agent spawning and management |
+| `claude-code-x` | Extended Claude Code workflows |
+
+</details>
+
+<details>
+<summary><h3>📋 56 Slash Commands</h3></summary>
+
+| Command | Description |
+|:--------|:------------|
+| `/deploy` | Execute deployment pipeline |
+| `/pr-create` | Create pull request |
+| `/issue-create` | Create GitHub issue |
+| `/health-check` | System health verification |
+| `/security-scan` | Run security audit |
+| `/dashboard` | Show project dashboard |
+| `/worktree-create` | Create git worktree |
+| `/tmux-orchestra-start` | Start tmux orchestration |
+| `/codex` | OpenAI Codex integration |
+| `/voicevox` | Voice synthesis |
+| `/generate-docs` | Generate documentation |
+| `/test-escalation` | Run test escalation |
+| ... and 44 more commands |
+
+</details>
+
+<details>
+<summary><h3>🪝 24 Hooks</h3></summary>
+
+| Hook | Description |
+|:-----|:------------|
+| `agent-complete.sh` | Post-agent execution |
+| `agent-worktree-pre.sh` | Before worktree creation |
+| `agent-worktree-post.sh` | After worktree creation |
+| `auto-format.sh` | Auto-format on save |
+| `validate-rust.sh` | Rust validation pre-commit |
+| `validate-typescript.sh` | TypeScript validation |
+| `git-ops-validator.sh` | Git operation validation |
+| `codex-monitor.sh` | Codex process monitoring |
+| `session-keepalive.sh` | Session persistence |
+| `notification.sh` | Desktop notifications |
+| ... and 14 more hooks |
+
+</details>
+
+### Plugin Installation
+
+Plugins are included in `plugins-unpacked/` directory when installed via npm:
+
+```bash
+# Access plugins after npm install
+ls node_modules/miyabi-mcp-bundle/plugins-unpacked/
+```
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -386,10 +498,13 @@ Claude Desktopを**強力な開発コマンドセンター**に変換する、�
 
 ### 🎯 特徴
 
-- **75以上のツール** を9カテゴリに統合
+- **76 MCPツール** を9カテゴリに統合
+- **38 AIエージェント** - コード生成、レビュー、デプロイ等
+- **22 開発スキル** - Rust、Git、TDD、セキュリティ等
+- **56 スラッシュコマンド** - デプロイ、PR作成、Issue管理等
+- **24 フック** - 自動フォーマット、バリデーション等
 - **設定不要** - すぐに使える
 - **本番環境対応** - 実際の開発環境でテスト済み
-- **クロスプラットフォーム** - macOS, Linux, Windows対応
 
 ## 📦 インストール
 
