@@ -7,6 +7,7 @@
 [![npm version](https://img.shields.io/npm/v/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
 [![npm downloads](https://img.shields.io/npm/dm/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
 [![CI](https://img.shields.io/github/actions/workflow/status/ShunsukeHayashi/miyabi-mcp-bundle/ci.yml?style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/ShunsukeHayashi/miyabi-mcp-bundle/actions/workflows/ci.yml)
+[![codecov](https://img.shields.io/codecov/c/github/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&logo=codecov&logoColor=white)](https://codecov.io/gh/ShunsukeHayashi/miyabi-mcp-bundle)
 [![GitHub stars](https://img.shields.io/github/stars/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&logo=github&logoColor=white&color=181717)](https://github.com/ShunsukeHayashi/miyabi-mcp-bundle)
 [![License](https://img.shields.io/github/license/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&color=blue)](LICENSE)
 
@@ -208,7 +209,7 @@ After configuration, try these commands in Claude Desktop:
 
 <div align="center">
 
-### 120 Tools Across 11 Categories
+### 172 Tools Across 21 Categories + Health Check
 
 </div>
 
@@ -797,7 +798,7 @@ Claude Desktopを**強力な開発コマンドセンター**に変換する、�
 
 ### 🎯 特徴
 
-- **🚀 120 MCPツール** を11カテゴリに統合
+- **🚀 172 MCPツール** を21カテゴリ + ヘルスチェックに統合
 - **🔐 エンタープライズグレードのセキュリティ** - インジェクション対策、パストラバーサル防止
 - **⚡ インテリジェントキャッシュ** - 高速レスポンス
 - **38 AIエージェント** - コード生成、レビュー、デプロイ等
@@ -865,6 +866,13 @@ npm install -g miyabi-mcp-bundle
 | 🐳 **Docker** | 10 | コンテナ一覧、ログ、stats、起動/停止、ビルド |
 | 📦 **Docker Compose** | 4 | サービス起動/停止、ログ、状態 |
 | ☸️ **Kubernetes** | 6 | Pod、Deployment、ログ、describe、apply/delete |
+| 📋 **Spec-Kit** | 9 | Spec-Driven Development（spec作成、検証） |
+| 🔎 **MCP Tool Discovery** | 3 | ツール検索、カテゴリ一覧 |
+| 🗄️ **Database Foundation** | 6 | SQLite/PostgreSQL/MySQL 基本操作 |
+| ⏰ **Time Tools** | 4 | タイムゾーン、フォーマット、差分 |
+| 🧮 **Calculator Tools** | 3 | 数式、単位変換、統計 |
+| 🧠 **Sequential Thinking** | 3 | 思考ステップ、分岐、要約 |
+| 🎲 **Generator Tools** | 4 | UUID、乱数、ハッシュ、パスワード |
 
 ---
 
@@ -897,6 +905,6 @@ Made with ❤️ by [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
 
 <br />
 
-**🚀 120 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
+**🚀 172 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
 
 </div>
