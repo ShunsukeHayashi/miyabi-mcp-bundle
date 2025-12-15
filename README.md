@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **120 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **140 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -39,7 +39,7 @@
 │   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
 │   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
 │                                                                 │
-│    The All-in-One MCP Server for Claude Desktop  v3.2.0        │
+│    The All-in-One MCP Server for Claude Desktop  v3.3.0        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **120 Tools in One Package**
-The largest collection of MCP tools: 120 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **140 Tools in One Package**
+The largest collection of MCP tools: 140 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -430,6 +430,50 @@ Validates: Git connectivity, GitHub API status, system resources, and overall he
 
 </details>
 
+<details>
+<summary><h3>🐳 Docker <code>10 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `docker_ps` | **NEW** List Docker containers (running/all) |
+| `docker_images` | **NEW** List Docker images |
+| `docker_logs` | **NEW** Get container logs with tail/since options |
+| `docker_inspect` | **NEW** Get container or image details |
+| `docker_stats` | **NEW** Get container resource usage (CPU/Memory) |
+| `docker_exec` | **NEW** Execute command in container |
+| `docker_start` | **NEW** Start a stopped container |
+| `docker_stop` | **NEW** Stop a running container |
+| `docker_restart` | **NEW** Restart a container |
+| `docker_build` | **NEW** Build Docker image from Dockerfile |
+
+</details>
+
+<details>
+<summary><h3>📦 Docker Compose <code>4 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `compose_ps` | **NEW** List Compose services status |
+| `compose_up` | **NEW** Start Compose services (detach, build options) |
+| `compose_down` | **NEW** Stop Compose services (volumes, orphans options) |
+| `compose_logs` | **NEW** Get Compose service logs |
+
+</details>
+
+<details>
+<summary><h3>☸️ Kubernetes <code>6 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `k8s_get_pods` | **NEW** List Kubernetes pods |
+| `k8s_get_deployments` | **NEW** List Kubernetes deployments |
+| `k8s_logs` | **NEW** Get pod logs |
+| `k8s_describe` | **NEW** Describe Kubernetes resource |
+| `k8s_apply` | **NEW** Apply Kubernetes manifest (dry-run supported) |
+| `k8s_delete` | **NEW** Delete Kubernetes resource (dry-run supported) |
+
+</details>
+
 ---
 
 ## 🔒 Security
@@ -723,6 +767,9 @@ npm install -g miyabi-mcp-bundle
 | 🏥 **Health Check** | 1 | システムヘルス検証 |
 | 🐧 **Linux systemd** | 3 | systemdユニット、ジャーナル |
 | 🪟 **Windows** | 2 | サービス状態、イベントログ |
+| 🐳 **Docker** | 10 | コンテナ一覧、ログ、stats、起動/停止、ビルド |
+| 📦 **Docker Compose** | 4 | サービス起動/停止、ログ、状態 |
+| ☸️ **Kubernetes** | 6 | Pod、Deployment、ログ、describe、apply/delete |
 
 ---
 

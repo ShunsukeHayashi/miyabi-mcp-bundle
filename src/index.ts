@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 120 tools across 11 categories:
+ * A comprehensive MCP server with 140 tools across 14 categories:
  * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
@@ -14,9 +14,12 @@
  * - GitHub Integration (21 tools)
  * - Linux systemd (3 tools)
  * - Windows (2 tools)
+ * - Docker (10 tools)
+ * - Docker Compose (4 tools)
+ * - Kubernetes (6 tools)
  * + System Health (1 tool)
  *
- * @version 3.2.0
+ * @version 3.3.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -319,6 +322,32 @@ const tools: Tool[] = [
   // === Windows (2 tools) ===
   { name: 'windows_service_status', description: 'Get Windows service status (Windows only)', inputSchema: { type: 'object', properties: { service: { type: 'string' } } } },
   { name: 'windows_eventlog_search', description: 'Search Windows Event Log (Windows only)', inputSchema: { type: 'object', properties: { log: { type: 'string', enum: ['Application', 'System', 'Security'] }, level: { type: 'string', enum: ['Error', 'Warning', 'Information'] }, source: { type: 'string' }, maxEvents: { type: 'number' } } } },
+
+  // === Docker (10 tools) ===
+  { name: 'docker_ps', description: 'List Docker containers', inputSchema: { type: 'object', properties: { all: { type: 'boolean', description: 'Show all containers (default shows running)' }, limit: { type: 'number', description: 'Limit output' } } } },
+  { name: 'docker_images', description: 'List Docker images', inputSchema: { type: 'object', properties: { all: { type: 'boolean' }, dangling: { type: 'boolean' } } } },
+  { name: 'docker_logs', description: 'Get container logs', inputSchema: { type: 'object', properties: { container: { type: 'string' }, tail: { type: 'number' }, since: { type: 'string' }, timestamps: { type: 'boolean' } }, required: ['container'] } },
+  { name: 'docker_inspect', description: 'Get container or image details', inputSchema: { type: 'object', properties: { target: { type: 'string' }, type: { type: 'string', enum: ['container', 'image'] } }, required: ['target'] } },
+  { name: 'docker_stats', description: 'Get container resource usage', inputSchema: { type: 'object', properties: { container: { type: 'string', description: 'Container name/id (optional, all if omitted)' }, noStream: { type: 'boolean' } } } },
+  { name: 'docker_exec', description: 'Execute command in container (read-only recommended)', inputSchema: { type: 'object', properties: { container: { type: 'string' }, command: { type: 'string' }, user: { type: 'string' } }, required: ['container', 'command'] } },
+  { name: 'docker_start', description: 'Start a stopped container', inputSchema: { type: 'object', properties: { container: { type: 'string' } }, required: ['container'] } },
+  { name: 'docker_stop', description: 'Stop a running container', inputSchema: { type: 'object', properties: { container: { type: 'string' }, timeout: { type: 'number' } }, required: ['container'] } },
+  { name: 'docker_restart', description: 'Restart a container', inputSchema: { type: 'object', properties: { container: { type: 'string' }, timeout: { type: 'number' } }, required: ['container'] } },
+  { name: 'docker_build', description: 'Build Docker image from Dockerfile', inputSchema: { type: 'object', properties: { path: { type: 'string' }, tag: { type: 'string' }, dockerfile: { type: 'string' }, noCache: { type: 'boolean' } } } },
+
+  // === Docker Compose (4 tools) ===
+  { name: 'compose_ps', description: 'List Compose services', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'Path to docker-compose.yml' }, all: { type: 'boolean' } } } },
+  { name: 'compose_up', description: 'Start Compose services', inputSchema: { type: 'object', properties: { path: { type: 'string' }, services: { type: 'array', items: { type: 'string' } }, detach: { type: 'boolean' }, build: { type: 'boolean' } } } },
+  { name: 'compose_down', description: 'Stop Compose services', inputSchema: { type: 'object', properties: { path: { type: 'string' }, volumes: { type: 'boolean' }, removeOrphans: { type: 'boolean' } } } },
+  { name: 'compose_logs', description: 'Get Compose service logs', inputSchema: { type: 'object', properties: { path: { type: 'string' }, services: { type: 'array', items: { type: 'string' } }, tail: { type: 'number' }, timestamps: { type: 'boolean' } } } },
+
+  // === Kubernetes (6 tools) ===
+  { name: 'k8s_get_pods', description: 'List Kubernetes pods', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, allNamespaces: { type: 'boolean' }, selector: { type: 'string' } } } },
+  { name: 'k8s_get_deployments', description: 'List Kubernetes deployments', inputSchema: { type: 'object', properties: { namespace: { type: 'string' }, allNamespaces: { type: 'boolean' } } } },
+  { name: 'k8s_logs', description: 'Get pod logs', inputSchema: { type: 'object', properties: { pod: { type: 'string' }, namespace: { type: 'string' }, container: { type: 'string' }, tail: { type: 'number' }, since: { type: 'string' } }, required: ['pod'] } },
+  { name: 'k8s_describe', description: 'Describe Kubernetes resource', inputSchema: { type: 'object', properties: { resource: { type: 'string', enum: ['pod', 'deployment', 'service', 'configmap', 'secret', 'node'] }, name: { type: 'string' }, namespace: { type: 'string' } }, required: ['resource', 'name'] } },
+  { name: 'k8s_apply', description: 'Apply Kubernetes manifest (use with caution)', inputSchema: { type: 'object', properties: { file: { type: 'string' }, namespace: { type: 'string' }, dryRun: { type: 'boolean' } }, required: ['file'] } },
+  { name: 'k8s_delete', description: 'Delete Kubernetes resource (use with caution)', inputSchema: { type: 'object', properties: { resource: { type: 'string' }, name: { type: 'string' }, namespace: { type: 'string' }, dryRun: { type: 'boolean' } }, required: ['resource', 'name'] } },
 ];
 
 // ========== Tool Handlers ==========
@@ -474,6 +503,9 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name === 'health_check') return await handleHealthCheck();
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
+    if (name.startsWith('docker_')) return await handleDockerTool(name, args);
+    if (name.startsWith('compose_')) return await handleComposeTool(name, args);
+    if (name.startsWith('k8s_')) return await handleK8sTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -1482,11 +1514,346 @@ async function handleWindowsTool(name: string, args: Record<string, unknown>): P
   return { error: `Unknown windows tool: ${name}` };
 }
 
+// ========== Docker Handler ==========
+async function handleDockerTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const hasDocker = await commandExists('docker');
+  if (!hasDocker) {
+    return { error: 'Docker is not installed or not in PATH' };
+  }
+
+  if (name === 'docker_ps') {
+    const all = args.all as boolean;
+    const limit = Math.min(Math.max((args.limit as number) || 100, 1), 500);
+    let cmd = `docker ps --format "{{json .}}"`;
+    if (all) cmd = `docker ps -a --format "{{json .}}"`;
+    cmd += ` -n ${limit}`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      const containers = stdout.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      return { containers, count: containers.length };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to list containers' };
+    }
+  }
+
+  if (name === 'docker_images') {
+    const all = args.all as boolean;
+    const dangling = args.dangling as boolean;
+    let cmd = `docker images --format "{{json .}}"`;
+    if (all) cmd += ' -a';
+    if (dangling) cmd = `docker images -f "dangling=true" --format "{{json .}}"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      const images = stdout.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      return { images, count: images.length };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to list images' };
+    }
+  }
+
+  if (name === 'docker_logs') {
+    const container = sanitizeShellArg(args.container as string);
+    if (!container) return { error: 'Container name/id required' };
+    const tail = Math.min(Math.max((args.tail as number) || 100, 1), 10000);
+    const timestamps = args.timestamps as boolean;
+    const since = sanitizeShellArg((args.since as string) || '');
+    let cmd = `docker logs --tail ${tail}`;
+    if (timestamps) cmd += ' --timestamps';
+    if (since) cmd += ` --since "${since}"`;
+    cmd += ` "${container}"`;
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 60000 });
+      return { logs: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get logs' };
+    }
+  }
+
+  if (name === 'docker_inspect') {
+    const target = sanitizeShellArg(args.target as string);
+    if (!target) return { error: 'Target (container/image) required' };
+    const type = args.type as string || 'container';
+    const cmd = type === 'image' ? `docker image inspect "${target}"` : `docker inspect "${target}"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      return { inspect: JSON.parse(stdout) };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to inspect' };
+    }
+  }
+
+  if (name === 'docker_stats') {
+    const container = sanitizeShellArg((args.container as string) || '');
+    const cmd = container
+      ? `docker stats --no-stream --format "{{json .}}" "${container}"`
+      : `docker stats --no-stream --format "{{json .}}"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      const stats = stdout.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      return { stats };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get stats' };
+    }
+  }
+
+  if (name === 'docker_exec') {
+    const container = sanitizeShellArg(args.container as string);
+    const command = sanitizeShellArg(args.command as string);
+    const user = sanitizeShellArg((args.user as string) || '');
+    if (!container || !command) return { error: 'Container and command required' };
+    let cmd = `docker exec`;
+    if (user) cmd += ` -u "${user}"`;
+    cmd += ` "${container}" ${command}`;
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 60000 });
+      return { output: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to exec' };
+    }
+  }
+
+  if (name === 'docker_start') {
+    const container = sanitizeShellArg(args.container as string);
+    if (!container) return { error: 'Container name/id required' };
+    try {
+      await execAsync(`docker start "${container}"`, { timeout: 30000 });
+      return { success: true, message: `Container ${container} started` };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to start container' };
+    }
+  }
+
+  if (name === 'docker_stop') {
+    const container = sanitizeShellArg(args.container as string);
+    if (!container) return { error: 'Container name/id required' };
+    const timeout = Math.min(Math.max((args.timeout as number) || 10, 1), 300);
+    try {
+      await execAsync(`docker stop -t ${timeout} "${container}"`, { timeout: (timeout + 10) * 1000 });
+      return { success: true, message: `Container ${container} stopped` };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to stop container' };
+    }
+  }
+
+  if (name === 'docker_restart') {
+    const container = sanitizeShellArg(args.container as string);
+    if (!container) return { error: 'Container name/id required' };
+    const timeout = Math.min(Math.max((args.timeout as number) || 10, 1), 300);
+    try {
+      await execAsync(`docker restart -t ${timeout} "${container}"`, { timeout: (timeout + 20) * 1000 });
+      return { success: true, message: `Container ${container} restarted` };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to restart container' };
+    }
+  }
+
+  if (name === 'docker_build') {
+    const path = sanitizeShellArg((args.path as string) || '.');
+    const tag = sanitizeShellArg((args.tag as string) || '');
+    const dockerfile = sanitizeShellArg((args.dockerfile as string) || '');
+    const noCache = args.noCache as boolean;
+    let cmd = `docker build`;
+    if (tag) cmd += ` -t "${tag}"`;
+    if (dockerfile) cmd += ` -f "${dockerfile}"`;
+    if (noCache) cmd += ' --no-cache';
+    cmd += ` "${path}"`;
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 600000 }); // 10 min timeout for builds
+      return { success: true, output: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Build failed' };
+    }
+  }
+
+  return { error: `Unknown docker tool: ${name}` };
+}
+
+// ========== Docker Compose Handler ==========
+async function handleComposeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // Check for docker compose (v2) or docker-compose (v1)
+  let composeCmd = 'docker compose';
+  const hasComposeV2 = await commandExists('docker');
+  if (!hasComposeV2) {
+    const hasComposeV1 = await commandExists('docker-compose');
+    if (!hasComposeV1) {
+      return { error: 'Docker Compose is not installed' };
+    }
+    composeCmd = 'docker-compose';
+  }
+
+  const composePath = sanitizeShellArg((args.path as string) || '');
+  const pathArg = composePath ? ` -f "${composePath}"` : '';
+
+  if (name === 'compose_ps') {
+    const all = args.all as boolean;
+    let cmd = `${composeCmd}${pathArg} ps --format json`;
+    if (all) cmd += ' -a';
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      // docker compose ps --format json returns JSONL
+      const services = stdout.trim().split('\n').filter(Boolean).map(line => {
+        try { return JSON.parse(line); } catch { return { raw: line }; }
+      });
+      return { services, count: services.length };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to list services' };
+    }
+  }
+
+  if (name === 'compose_up') {
+    const services = (args.services as string[]) || [];
+    const detach = args.detach !== false; // default true
+    const build = args.build as boolean;
+    let cmd = `${composeCmd}${pathArg} up`;
+    if (detach) cmd += ' -d';
+    if (build) cmd += ' --build';
+    if (services.length > 0) {
+      cmd += ' ' + services.map(s => sanitizeShellArg(s)).join(' ');
+    }
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 300000 }); // 5 min
+      return { success: true, output: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to start services' };
+    }
+  }
+
+  if (name === 'compose_down') {
+    const volumes = args.volumes as boolean;
+    const removeOrphans = args.removeOrphans as boolean;
+    let cmd = `${composeCmd}${pathArg} down`;
+    if (volumes) cmd += ' -v';
+    if (removeOrphans) cmd += ' --remove-orphans';
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 120000 });
+      return { success: true, output: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to stop services' };
+    }
+  }
+
+  if (name === 'compose_logs') {
+    const services = (args.services as string[]) || [];
+    const tail = Math.min(Math.max((args.tail as number) || 100, 1), 5000);
+    const timestamps = args.timestamps as boolean;
+    let cmd = `${composeCmd}${pathArg} logs --tail ${tail}`;
+    if (timestamps) cmd += ' --timestamps';
+    if (services.length > 0) {
+      cmd += ' ' + services.map(s => sanitizeShellArg(s)).join(' ');
+    }
+    try {
+      const { stdout, stderr } = await execAsync(cmd, { timeout: 60000 });
+      return { logs: stdout || stderr };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get logs' };
+    }
+  }
+
+  return { error: `Unknown compose tool: ${name}` };
+}
+
+// ========== Kubernetes Handler ==========
+async function handleK8sTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const hasKubectl = await commandExists('kubectl');
+  if (!hasKubectl) {
+    return { error: 'kubectl is not installed or not in PATH' };
+  }
+
+  const namespace = sanitizeShellArg((args.namespace as string) || '');
+  const nsArg = namespace ? ` -n "${namespace}"` : '';
+  const allNsArg = args.allNamespaces ? ' --all-namespaces' : '';
+
+  if (name === 'k8s_get_pods') {
+    const selector = sanitizeShellArg((args.selector as string) || '');
+    let cmd = `kubectl get pods${nsArg}${allNsArg} -o json`;
+    if (selector) cmd = `kubectl get pods${nsArg}${allNsArg} -l "${selector}" -o json`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      const result = JSON.parse(stdout);
+      return { pods: result.items || [], count: (result.items || []).length };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get pods' };
+    }
+  }
+
+  if (name === 'k8s_get_deployments') {
+    const cmd = `kubectl get deployments${nsArg}${allNsArg} -o json`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      const result = JSON.parse(stdout);
+      return { deployments: result.items || [], count: (result.items || []).length };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get deployments' };
+    }
+  }
+
+  if (name === 'k8s_logs') {
+    const pod = sanitizeShellArg(args.pod as string);
+    if (!pod) return { error: 'Pod name required' };
+    const container = sanitizeShellArg((args.container as string) || '');
+    const tail = Math.min(Math.max((args.tail as number) || 100, 1), 10000);
+    const since = sanitizeShellArg((args.since as string) || '');
+    let cmd = `kubectl logs${nsArg} "${pod}" --tail=${tail}`;
+    if (container) cmd += ` -c "${container}"`;
+    if (since) cmd += ` --since="${since}"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 60000 });
+      return { logs: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get logs' };
+    }
+  }
+
+  if (name === 'k8s_describe') {
+    const resource = sanitizeShellArg(args.resource as string);
+    const resourceName = sanitizeShellArg(args.name as string);
+    if (!resource || !resourceName) return { error: 'Resource type and name required' };
+    const cmd = `kubectl describe ${resource}${nsArg} "${resourceName}"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      return { description: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to describe resource' };
+    }
+  }
+
+  if (name === 'k8s_apply') {
+    const file = sanitizeShellArg(args.file as string);
+    if (!file) return { error: 'Manifest file path required' };
+    const dryRun = args.dryRun as boolean;
+    let cmd = `kubectl apply${nsArg} -f "${file}"`;
+    if (dryRun) cmd += ' --dry-run=client';
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 60000 });
+      return { success: true, output: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to apply manifest' };
+    }
+  }
+
+  if (name === 'k8s_delete') {
+    const resource = sanitizeShellArg(args.resource as string);
+    const resourceName = sanitizeShellArg(args.name as string);
+    if (!resource || !resourceName) return { error: 'Resource type and name required' };
+    const dryRun = args.dryRun as boolean;
+    let cmd = `kubectl delete ${resource}${nsArg} "${resourceName}"`;
+    if (dryRun) cmd += ' --dry-run=client';
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 60000 });
+      return { success: true, output: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to delete resource' };
+    }
+  }
+
+  return { error: `Unknown k8s tool: ${name}` };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.2.0',
+    version: '3.3.0',
   },
   {
     capabilities: {
@@ -1516,7 +1883,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   console.error('');
   console.error('┌────────────────────────────────────────────────┐');
-  console.error('│  🌸 Miyabi MCP Bundle v3.1.0                   │');
+  console.error('│  🌸 Miyabi MCP Bundle v3.3.0                   │');
   console.error('│  The Most Comprehensive MCP Server             │');
   console.error('├────────────────────────────────────────────────┤');
   console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);

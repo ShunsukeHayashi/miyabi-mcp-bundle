@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2025-12-15
+
+### Added
+- **🐳 Docker Inspector** - Complete container management (Issue #11)
+- **140 Total Tools** - Major expansion from 120 to 140 tools (+20)
+- **3 New Categories**:
+  - **Docker (10 tools)**: Container lifecycle management
+  - **Docker Compose (4 tools)**: Multi-container orchestration
+  - **Kubernetes (6 tools)**: K8s cluster management
+- **10 Docker Tools**:
+  - `docker_ps` - List containers (running/all)
+  - `docker_images` - List images
+  - `docker_logs` - Get container logs
+  - `docker_inspect` - Container/image details
+  - `docker_stats` - Resource usage stats
+  - `docker_exec` - Execute commands in containers
+  - `docker_start` - Start containers
+  - `docker_stop` - Stop containers
+  - `docker_restart` - Restart containers
+  - `docker_build` - Build images from Dockerfile
+- **4 Docker Compose Tools**:
+  - `compose_ps` - List service status
+  - `compose_up` - Start services
+  - `compose_down` - Stop services
+  - `compose_logs` - Get service logs
+- **6 Kubernetes Tools**:
+  - `k8s_get_pods` - List pods
+  - `k8s_get_deployments` - List deployments
+  - `k8s_logs` - Get pod logs
+  - `k8s_describe` - Describe resources
+  - `k8s_apply` - Apply manifests (dry-run supported)
+  - `k8s_delete` - Delete resources (dry-run supported)
+
+### Changed
+- Categories increased from 11 to 14
+- All container commands include proper input sanitization
+- Timeouts configured for long-running operations (builds up to 10min)
+
+### Security
+- Docker socket access validation
+- Container name/ID sanitization to prevent injection
+- Safe defaults for all operations
+
 ## [3.2.0] - 2025-12-15
 
 ### Added
