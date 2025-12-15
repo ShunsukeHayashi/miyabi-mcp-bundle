@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2025-12-15
+
+### Added
+- **📋 Spec-Kit Integration** - Spec-Driven Development workflow
+- **🔍 MCP Tool Discovery** - Search and discover tools dynamically
+- **152 Total Tools** - Expansion from 140 to 152 tools (+12)
+- **2 New Categories**:
+  - **Spec-Kit (9 tools)**: Feature specification and planning workflow
+  - **MCP Tool Discovery (3 tools)**: Search and discover available tools
+- **9 Spec-Kit Tools** (GitHub spec-kit compatible):
+  - `speckit_init` - Initialize Spec-Kit in project (creates .speckit/ directory)
+  - `speckit_status` - Get Spec-Kit project status
+  - `speckit_constitution` - Read or update project constitution (principles)
+  - `speckit_specify` - Create feature specification from description
+  - `speckit_plan` - Generate implementation plan for a feature
+  - `speckit_tasks` - Generate task list from plan
+  - `speckit_checklist` - Create implementation checklist
+  - `speckit_analyze` - Analyze project for consistency
+  - `speckit_list_features` - List all features in project
+- **3 MCP Tool Discovery Tools**:
+  - `mcp_search_tools` - Search tools by name or description with category filter
+  - `mcp_list_categories` - List all tool categories with counts and descriptions
+  - `mcp_get_tool_info` - Get detailed info about a specific tool including parameters
+
+### Changed
+- Categories increased from 14 to 16
+- Integrated GitHub's spec-kit methodology for structured development
+- Added tool discovery for better discoverability of 152+ tools
+
+### Documentation
+- Added Spec-Kit workflow documentation
+- Added MCP Tool Discovery documentation
+- Updated tool counts across all documentation
+
 ## [3.3.0] - 2025-12-15
 
 ### Added

@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 140 tools across 14 categories:
+ * A comprehensive MCP server with 152 tools across 16 categories:
  * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
@@ -17,9 +17,11 @@
  * - Docker (10 tools)
  * - Docker Compose (4 tools)
  * - Kubernetes (6 tools)
+ * - Spec-Kit (9 tools) - Spec-Driven Development
+ * - MCP Tool Discovery (3 tools) - Search and discover tools
  * + System Health (1 tool)
  *
- * @version 3.3.0
+ * @version 3.4.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -348,6 +350,22 @@ const tools: Tool[] = [
   { name: 'k8s_describe', description: 'Describe Kubernetes resource', inputSchema: { type: 'object', properties: { resource: { type: 'string', enum: ['pod', 'deployment', 'service', 'configmap', 'secret', 'node'] }, name: { type: 'string' }, namespace: { type: 'string' } }, required: ['resource', 'name'] } },
   { name: 'k8s_apply', description: 'Apply Kubernetes manifest (use with caution)', inputSchema: { type: 'object', properties: { file: { type: 'string' }, namespace: { type: 'string' }, dryRun: { type: 'boolean' } }, required: ['file'] } },
   { name: 'k8s_delete', description: 'Delete Kubernetes resource (use with caution)', inputSchema: { type: 'object', properties: { resource: { type: 'string' }, name: { type: 'string' }, namespace: { type: 'string' }, dryRun: { type: 'boolean' } }, required: ['resource', 'name'] } },
+
+  // === Spec-Kit (9 tools) - Spec-Driven Development ===
+  { name: 'speckit_init', description: 'Initialize Spec-Kit in project (creates .speckit/ directory)', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'Project path (default: current)' } } } },
+  { name: 'speckit_status', description: 'Get Spec-Kit project status', inputSchema: { type: 'object', properties: { path: { type: 'string' } } } },
+  { name: 'speckit_constitution', description: 'Read or update project constitution (principles)', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string', description: 'New constitution content (omit to read)' } } } },
+  { name: 'speckit_specify', description: 'Create feature specification from description', inputSchema: { type: 'object', properties: { feature: { type: 'string', description: 'Feature description' }, path: { type: 'string' } }, required: ['feature'] } },
+  { name: 'speckit_plan', description: 'Generate implementation plan for a feature', inputSchema: { type: 'object', properties: { feature: { type: 'string', description: 'Feature name/id' }, path: { type: 'string' } }, required: ['feature'] } },
+  { name: 'speckit_tasks', description: 'Generate task list from plan', inputSchema: { type: 'object', properties: { feature: { type: 'string' }, path: { type: 'string' } }, required: ['feature'] } },
+  { name: 'speckit_checklist', description: 'Create implementation checklist', inputSchema: { type: 'object', properties: { feature: { type: 'string' }, path: { type: 'string' } }, required: ['feature'] } },
+  { name: 'speckit_analyze', description: 'Analyze project for consistency', inputSchema: { type: 'object', properties: { path: { type: 'string' } } } },
+  { name: 'speckit_list_features', description: 'List all features in project', inputSchema: { type: 'object', properties: { path: { type: 'string' } } } },
+
+  // === MCP Tool Discovery (3 tools) ===
+  { name: 'mcp_search_tools', description: 'Search MCP tools by name or description', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query (matches name or description)' }, category: { type: 'string', description: 'Filter by category prefix (git, tmux, docker, etc)' } } } },
+  { name: 'mcp_list_categories', description: 'List all tool categories with counts', inputSchema: { type: 'object', properties: {} } },
+  { name: 'mcp_get_tool_info', description: 'Get detailed information about a specific tool', inputSchema: { type: 'object', properties: { tool: { type: 'string', description: 'Tool name' } }, required: ['tool'] } },
 ];
 
 // ========== Tool Handlers ==========
@@ -506,6 +524,8 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
     if (name.startsWith('compose_')) return await handleComposeTool(name, args);
     if (name.startsWith('k8s_')) return await handleK8sTool(name, args);
+    if (name.startsWith('speckit_')) return await handleSpeckitTool(name, args);
+    if (name.startsWith('mcp_')) return await handleMcpTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -1849,11 +1869,658 @@ async function handleK8sTool(name: string, args: Record<string, unknown>): Promi
   return { error: `Unknown k8s tool: ${name}` };
 }
 
+// ========== Spec-Kit Handler ==========
+async function handleSpeckitTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const projectPath = (args.path as string) || MIYABI_REPO_PATH;
+  const safePath = sanitizePath(projectPath, '.');
+  const speckitDir = join(safePath, '.speckit');
+  const specsDir = join(safePath, 'specs');
+
+  // speckit_init - Initialize Spec-Kit in project
+  if (name === 'speckit_init') {
+    try {
+      const { mkdir, writeFile } = await import('fs/promises');
+
+      // Create .speckit directory structure
+      await mkdir(speckitDir, { recursive: true });
+      await mkdir(join(speckitDir, 'templates'), { recursive: true });
+      await mkdir(specsDir, { recursive: true });
+
+      // Create default constitution.md
+      const constitutionPath = join(safePath, 'memory', 'constitution.md');
+      const memoryDir = join(safePath, 'memory');
+      if (!existsSync(constitutionPath)) {
+        await mkdir(memoryDir, { recursive: true });
+        await writeFile(constitutionPath, `# Project Constitution
+
+## Core Principles
+1. Code quality over speed
+2. User experience first
+3. Security by design
+4. Test coverage required
+
+## Technology Choices
+- Prefer TypeScript for type safety
+- Use established patterns
+- Document decisions
+
+## Constraints
+- No breaking changes without migration path
+- All public APIs require documentation
+`);
+      }
+
+      // Create spec template
+      const templatePath = join(speckitDir, 'templates', 'spec-template.md');
+      await writeFile(templatePath, `# Feature: [FEATURE_NAME]
+
+## Summary
+Brief description of the feature.
+
+## User Stories
+- As a [user type], I want to [action] so that [benefit]
+
+## Functional Requirements
+1. [Requirement 1]
+2. [Requirement 2]
+
+## Success Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Assumptions
+- [Assumption 1]
+
+## Dependencies
+- [Dependency 1]
+`);
+
+      return {
+        success: true,
+        message: 'Spec-Kit initialized',
+        created: [
+          speckitDir,
+          join(speckitDir, 'templates'),
+          specsDir,
+          memoryDir,
+          constitutionPath,
+          templatePath
+        ]
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to initialize Spec-Kit' };
+    }
+  }
+
+  // speckit_status - Get project status
+  if (name === 'speckit_status') {
+    const status = {
+      initialized: existsSync(speckitDir),
+      hasConstitution: existsSync(join(safePath, 'memory', 'constitution.md')),
+      hasSpecs: existsSync(specsDir),
+      features: [] as string[]
+    };
+
+    if (existsSync(specsDir)) {
+      try {
+        const entries = await readdir(specsDir, { withFileTypes: true });
+        status.features = entries
+          .filter(e => e.isDirectory())
+          .map(e => e.name);
+      } catch { /* ignore */ }
+    }
+
+    return status;
+  }
+
+  // speckit_constitution - Read or update constitution
+  if (name === 'speckit_constitution') {
+    const constitutionPath = join(safePath, 'memory', 'constitution.md');
+    const content = args.content as string | undefined;
+
+    if (content) {
+      // Update constitution
+      try {
+        const { writeFile, mkdir } = await import('fs/promises');
+        await mkdir(join(safePath, 'memory'), { recursive: true });
+        await writeFile(constitutionPath, content);
+        return { success: true, message: 'Constitution updated' };
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to update constitution' };
+      }
+    } else {
+      // Read constitution
+      if (!existsSync(constitutionPath)) {
+        return { error: 'Constitution not found. Run speckit_init first.' };
+      }
+      const constitutionContent = await readFile(constitutionPath, 'utf-8');
+      return { content: constitutionContent };
+    }
+  }
+
+  // speckit_specify - Create feature specification
+  if (name === 'speckit_specify') {
+    const feature = args.feature as string;
+    if (!feature) return { error: 'Feature description required' };
+
+    // Generate short name from feature description
+    const shortName = feature
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 4)
+      .join('-');
+
+    // Find next available number
+    let nextNum = 1;
+    if (existsSync(specsDir)) {
+      try {
+        const entries = await readdir(specsDir, { withFileTypes: true });
+        const numbers = entries
+          .filter(e => e.isDirectory())
+          .map(e => parseInt(e.name.split('-')[0], 10))
+          .filter(n => !isNaN(n));
+        if (numbers.length > 0) {
+          nextNum = Math.max(...numbers) + 1;
+        }
+      } catch { /* ignore */ }
+    }
+
+    const featureDir = join(specsDir, `${nextNum}-${shortName}`);
+    const specFile = join(featureDir, 'spec.md');
+
+    try {
+      const { mkdir, writeFile } = await import('fs/promises');
+      await mkdir(featureDir, { recursive: true });
+      await mkdir(join(featureDir, 'checklists'), { recursive: true });
+
+      const specContent = `# Feature: ${feature}
+
+## Summary
+${feature}
+
+## User Stories
+- As a user, I want to ${feature.toLowerCase()} so that I can accomplish my goal
+
+## Functional Requirements
+1. [NEEDS CLARIFICATION: Define primary requirement]
+
+## Success Criteria
+- [ ] Feature is implemented and tested
+- [ ] Documentation is updated
+
+## Assumptions
+- Standard project setup
+
+## Dependencies
+- None identified yet
+`;
+
+      await writeFile(specFile, specContent);
+
+      return {
+        success: true,
+        featureId: `${nextNum}-${shortName}`,
+        featureDir,
+        specFile,
+        message: `Feature specification created: ${nextNum}-${shortName}`
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create specification' };
+    }
+  }
+
+  // speckit_plan - Generate implementation plan
+  if (name === 'speckit_plan') {
+    const feature = args.feature as string;
+    if (!feature) return { error: 'Feature name/id required' };
+
+    // Find feature directory
+    let featureDir: string | null = null;
+    if (existsSync(specsDir)) {
+      const entries = await readdir(specsDir, { withFileTypes: true });
+      const match = entries.find(e =>
+        e.isDirectory() && e.name.includes(feature.toLowerCase().replace(/\s+/g, '-'))
+      );
+      if (match) featureDir = join(specsDir, match.name);
+    }
+
+    if (!featureDir || !existsSync(featureDir)) {
+      return { error: `Feature not found: ${feature}. Run speckit_specify first.` };
+    }
+
+    const specFile = join(featureDir, 'spec.md');
+    if (!existsSync(specFile)) {
+      return { error: 'Spec file not found in feature directory' };
+    }
+
+    const planFile = join(featureDir, 'plan.md');
+
+    try {
+      const { writeFile } = await import('fs/promises');
+
+      const planContent = `# Implementation Plan
+
+## Feature
+${feature}
+
+## Technical Context
+- **Framework**: [To be determined]
+- **Dependencies**: [To be determined]
+
+## Phase 0: Research
+- [ ] Review existing codebase patterns
+- [ ] Identify integration points
+- [ ] Resolve NEEDS CLARIFICATION items
+
+## Phase 1: Design
+- [ ] Create data model
+- [ ] Define API contracts
+- [ ] Plan test strategy
+
+## Phase 2: Implementation
+- [ ] Implement core functionality
+- [ ] Add tests
+- [ ] Update documentation
+
+## Constitution Check
+- [ ] Follows project principles
+- [ ] Security considered
+- [ ] Test coverage planned
+
+## Generated from
+\`\`\`
+${specFile}
+\`\`\`
+`;
+
+      await writeFile(planFile, planContent);
+
+      return {
+        success: true,
+        planFile,
+        message: `Implementation plan created: ${planFile}`
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create plan' };
+    }
+  }
+
+  // speckit_tasks - Generate task list
+  if (name === 'speckit_tasks') {
+    const feature = args.feature as string;
+    if (!feature) return { error: 'Feature name/id required' };
+
+    // Find feature directory
+    let featureDir: string | null = null;
+    if (existsSync(specsDir)) {
+      const entries = await readdir(specsDir, { withFileTypes: true });
+      const match = entries.find(e =>
+        e.isDirectory() && e.name.includes(feature.toLowerCase().replace(/\s+/g, '-'))
+      );
+      if (match) featureDir = join(specsDir, match.name);
+    }
+
+    if (!featureDir) {
+      return { error: `Feature not found: ${feature}` };
+    }
+
+    const planFile = join(featureDir, 'plan.md');
+    if (!existsSync(planFile)) {
+      return { error: 'Plan file not found. Run speckit_plan first.' };
+    }
+
+    const tasksFile = join(featureDir, 'tasks.md');
+
+    try {
+      const { writeFile } = await import('fs/promises');
+
+      const tasksContent = `# Tasks: ${feature}
+
+## Phase 1: Setup
+- [ ] T001 Create project structure per implementation plan
+- [ ] T002 Install required dependencies
+
+## Phase 2: Foundation
+- [ ] T003 Set up base infrastructure
+- [ ] T004 Create initial configuration
+
+## Phase 3: Implementation
+- [ ] T005 [P] Implement core functionality
+- [ ] T006 [P] Add unit tests
+- [ ] T007 Integration testing
+
+## Phase 4: Polish
+- [ ] T008 Update documentation
+- [ ] T009 Code review and cleanup
+- [ ] T010 Final testing
+
+## Dependencies
+- T003 depends on T001, T002
+- T005, T006 can run in parallel after T004
+- T008 depends on T005, T006, T007
+
+## Notes
+- [P] indicates parallelizable tasks
+- Task IDs follow sequential order
+`;
+
+      await writeFile(tasksFile, tasksContent);
+
+      return {
+        success: true,
+        tasksFile,
+        taskCount: 10,
+        message: `Task list created: ${tasksFile}`
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create tasks' };
+    }
+  }
+
+  // speckit_checklist - Create implementation checklist
+  if (name === 'speckit_checklist') {
+    const feature = args.feature as string;
+    if (!feature) return { error: 'Feature name/id required' };
+
+    // Find feature directory
+    let featureDir: string | null = null;
+    if (existsSync(specsDir)) {
+      const entries = await readdir(specsDir, { withFileTypes: true });
+      const match = entries.find(e =>
+        e.isDirectory() && e.name.includes(feature.toLowerCase().replace(/\s+/g, '-'))
+      );
+      if (match) featureDir = join(specsDir, match.name);
+    }
+
+    if (!featureDir) {
+      return { error: `Feature not found: ${feature}` };
+    }
+
+    const checklistDir = join(featureDir, 'checklists');
+    const checklistFile = join(checklistDir, 'requirements.md');
+
+    try {
+      const { writeFile, mkdir } = await import('fs/promises');
+      await mkdir(checklistDir, { recursive: true });
+
+      const checklistContent = `# Specification Quality Checklist: ${feature}
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: ${new Date().toISOString().split('T')[0]}
+**Feature**: [specs/${feature}/spec.md]
+
+## Content Quality
+
+- [ ] No implementation details (languages, frameworks, APIs)
+- [ ] Focused on user value and business needs
+- [ ] Written for non-technical stakeholders
+- [ ] All mandatory sections completed
+
+## Requirement Completeness
+
+- [ ] No [NEEDS CLARIFICATION] markers remain
+- [ ] Requirements are testable and unambiguous
+- [ ] Success criteria are measurable
+- [ ] Success criteria are technology-agnostic (no implementation details)
+- [ ] All acceptance scenarios are defined
+- [ ] Edge cases are identified
+- [ ] Scope is clearly bounded
+- [ ] Dependencies and assumptions identified
+
+## Feature Readiness
+
+- [ ] All functional requirements have clear acceptance criteria
+- [ ] User scenarios cover primary flows
+- [ ] Feature meets measurable outcomes defined in Success Criteria
+- [ ] No implementation details leak into specification
+
+## Notes
+
+- Items marked incomplete require spec updates before /speckit.clarify or /speckit.plan
+`;
+
+      await writeFile(checklistFile, checklistContent);
+
+      return {
+        success: true,
+        checklistFile,
+        message: `Checklist created: ${checklistFile}`
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to create checklist' };
+    }
+  }
+
+  // speckit_analyze - Analyze project consistency
+  if (name === 'speckit_analyze') {
+    const analysis = {
+      projectPath: safePath,
+      speckit: {
+        initialized: existsSync(speckitDir),
+        hasTemplates: existsSync(join(speckitDir, 'templates'))
+      },
+      constitution: {
+        exists: existsSync(join(safePath, 'memory', 'constitution.md'))
+      },
+      features: [] as Array<{
+        id: string;
+        hasSpec: boolean;
+        hasPlan: boolean;
+        hasTasks: boolean;
+        hasChecklist: boolean;
+      }>
+    };
+
+    if (existsSync(specsDir)) {
+      const entries = await readdir(specsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const featurePath = join(specsDir, entry.name);
+          analysis.features.push({
+            id: entry.name,
+            hasSpec: existsSync(join(featurePath, 'spec.md')),
+            hasPlan: existsSync(join(featurePath, 'plan.md')),
+            hasTasks: existsSync(join(featurePath, 'tasks.md')),
+            hasChecklist: existsSync(join(featurePath, 'checklists', 'requirements.md'))
+          });
+        }
+      }
+    }
+
+    const issues: string[] = [];
+    if (!analysis.speckit.initialized) {
+      issues.push('Spec-Kit not initialized. Run speckit_init.');
+    }
+    if (!analysis.constitution.exists) {
+      issues.push('Constitution missing. Run speckit_init or speckit_constitution.');
+    }
+    for (const f of analysis.features) {
+      if (!f.hasSpec) issues.push(`Feature ${f.id} missing spec.md`);
+      if (f.hasSpec && !f.hasPlan) issues.push(`Feature ${f.id} has spec but no plan`);
+    }
+
+    return {
+      ...analysis,
+      issues,
+      isConsistent: issues.length === 0
+    };
+  }
+
+  // speckit_list_features - List all features
+  if (name === 'speckit_list_features') {
+    if (!existsSync(specsDir)) {
+      return { features: [], message: 'No specs directory found. Run speckit_init.' };
+    }
+
+    const entries = await readdir(specsDir, { withFileTypes: true });
+    const features = await Promise.all(
+      entries
+        .filter(e => e.isDirectory())
+        .map(async (e) => {
+          const featurePath = join(specsDir, e.name);
+          const specFile = join(featurePath, 'spec.md');
+          let summary = '';
+
+          if (existsSync(specFile)) {
+            const content = await readFile(specFile, 'utf-8');
+            const summaryMatch = content.match(/## Summary\n([^\n]+)/);
+            if (summaryMatch) summary = summaryMatch[1].trim();
+          }
+
+          return {
+            id: e.name,
+            summary,
+            hasSpec: existsSync(specFile),
+            hasPlan: existsSync(join(featurePath, 'plan.md')),
+            hasTasks: existsSync(join(featurePath, 'tasks.md'))
+          };
+        })
+    );
+
+    return { features, count: features.length };
+  }
+
+  return { error: `Unknown speckit tool: ${name}` };
+}
+
+// ========== MCP Tool Discovery Handler ==========
+async function handleMcpTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // mcp_search_tools - Search tools by name or description
+  if (name === 'mcp_search_tools') {
+    const query = (args.query as string || '').toLowerCase();
+    const category = (args.category as string || '').toLowerCase();
+
+    let results = tools;
+
+    // Filter by category prefix
+    if (category) {
+      results = results.filter(t => t.name.toLowerCase().startsWith(category));
+    }
+
+    // Filter by query (matches name or description)
+    if (query) {
+      results = results.filter(t =>
+        t.name.toLowerCase().includes(query) ||
+        (t.description && t.description.toLowerCase().includes(query))
+      );
+    }
+
+    return {
+      query,
+      category: category || 'all',
+      count: results.length,
+      tools: results.map(t => ({
+        name: t.name,
+        description: t.description
+      }))
+    };
+  }
+
+  // mcp_list_categories - List all categories with counts
+  if (name === 'mcp_list_categories') {
+    const categories: Record<string, { count: number; description: string }> = {};
+
+    const categoryDescriptions: Record<string, string> = {
+      git: 'Git version control operations',
+      tmux: 'Terminal multiplexer management',
+      log: 'Log file analysis and search',
+      resource: 'System resource monitoring (CPU, memory, disk)',
+      network: 'Network inspection and diagnostics',
+      process: 'Process management and monitoring',
+      file: 'File system operations and watching',
+      claude: 'Claude Code session management',
+      github: 'GitHub API integration (issues, PRs, workflows)',
+      linux: 'Linux systemd service management',
+      windows: 'Windows service and event log',
+      docker: 'Docker container management',
+      compose: 'Docker Compose orchestration',
+      k8s: 'Kubernetes cluster management',
+      speckit: 'Spec-Driven Development workflow',
+      mcp: 'MCP tool discovery and search',
+      health: 'System health check'
+    };
+
+    for (const tool of tools) {
+      const prefix = tool.name.split('_')[0];
+      if (!categories[prefix]) {
+        categories[prefix] = {
+          count: 0,
+          description: categoryDescriptions[prefix] || 'Miscellaneous tools'
+        };
+      }
+      categories[prefix].count++;
+    }
+
+    const sortedCategories = Object.entries(categories)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([name, info]) => ({
+        category: name,
+        ...info
+      }));
+
+    return {
+      totalTools: tools.length,
+      categoryCount: sortedCategories.length,
+      categories: sortedCategories
+    };
+  }
+
+  // mcp_get_tool_info - Get detailed info about a specific tool
+  if (name === 'mcp_get_tool_info') {
+    const toolName = args.tool as string;
+    if (!toolName) return { error: 'Tool name required' };
+
+    const tool = tools.find(t => t.name === toolName);
+    if (!tool) {
+      // Try fuzzy match
+      const matches = tools.filter(t =>
+        t.name.toLowerCase().includes(toolName.toLowerCase())
+      );
+      if (matches.length > 0) {
+        return {
+          error: `Tool '${toolName}' not found`,
+          suggestions: matches.slice(0, 5).map(t => t.name)
+        };
+      }
+      return { error: `Tool '${toolName}' not found` };
+    }
+
+    // Parse schema for parameters
+    const schema = tool.inputSchema as {
+      properties?: Record<string, { type: string; description?: string; enum?: string[] }>;
+      required?: string[];
+    };
+
+    const parameters = schema.properties
+      ? Object.entries(schema.properties).map(([name, prop]) => ({
+          name,
+          type: prop.type,
+          description: prop.description || '',
+          required: schema.required?.includes(name) || false,
+          enum: prop.enum
+        }))
+      : [];
+
+    return {
+      name: tool.name,
+      description: tool.description,
+      category: tool.name.split('_')[0],
+      parameters,
+      requiredParams: schema.required || [],
+      example: `Call with: { ${parameters.map(p => `"${p.name}": ${p.type === 'string' ? '"value"' : p.type === 'number' ? '123' : p.type === 'boolean' ? 'true' : '...'}`).join(', ')} }`
+    };
+  }
+
+  return { error: `Unknown mcp tool: ${name}` };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.3.0',
+    version: '3.4.0',
   },
   {
     capabilities: {
@@ -1883,7 +2550,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   console.error('');
   console.error('┌────────────────────────────────────────────────┐');
-  console.error('│  🌸 Miyabi MCP Bundle v3.3.0                   │');
+  console.error('│  🌸 Miyabi MCP Bundle v3.4.0                   │');
   console.error('│  The Most Comprehensive MCP Server             │');
   console.error('├────────────────────────────────────────────────┤');
   console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);

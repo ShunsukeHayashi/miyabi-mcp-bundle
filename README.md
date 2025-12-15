@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **140 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **152 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -39,7 +39,7 @@
 │   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
 │   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
 │                                                                 │
-│    The All-in-One MCP Server for Claude Desktop  v3.3.0        │
+│    The All-in-One MCP Server for Claude Desktop  v3.4.0        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **140 Tools in One Package**
-The largest collection of MCP tools: 140 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **152 Tools in One Package**
+The largest collection of MCP tools: 152 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -87,7 +87,7 @@ Comprehensive system health validation and diagnostics.
 
 | Feature | Miyabi | Other MCP Servers |
 |---------|:------:|:-----------------:|
-| Total Tools | **120** | 10-30 |
+| Total Tools | **152** | 10-30 |
 | Security Sanitization | ✅ | ❌ |
 | Built-in Caching | ✅ | ❌ |
 | Health Check | ✅ | ❌ |
@@ -471,6 +471,34 @@ Validates: Git connectivity, GitHub API status, system resources, and overall he
 | `k8s_describe` | **NEW** Describe Kubernetes resource |
 | `k8s_apply` | **NEW** Apply Kubernetes manifest (dry-run supported) |
 | `k8s_delete` | **NEW** Delete Kubernetes resource (dry-run supported) |
+
+</details>
+
+<details>
+<summary><h3>📋 Spec-Kit <code>9 tools</code> - Spec-Driven Development</h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `speckit_init` | **NEW** Initialize Spec-Kit in project (creates .speckit/ directory) |
+| `speckit_status` | **NEW** Get Spec-Kit project status |
+| `speckit_constitution` | **NEW** Read or update project constitution (principles) |
+| `speckit_specify` | **NEW** Create feature specification from description |
+| `speckit_plan` | **NEW** Generate implementation plan for a feature |
+| `speckit_tasks` | **NEW** Generate task list from plan |
+| `speckit_checklist` | **NEW** Create implementation checklist |
+| `speckit_analyze` | **NEW** Analyze project for consistency |
+| `speckit_list_features` | **NEW** List all features in project |
+
+</details>
+
+<details>
+<summary><h3>🔍 MCP Tool Discovery <code>3 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `mcp_search_tools` | **NEW** Search MCP tools by name or description |
+| `mcp_list_categories` | **NEW** List all tool categories with counts |
+| `mcp_get_tool_info` | **NEW** Get detailed information about a specific tool |
 
 </details>
 
