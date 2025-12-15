@@ -26,7 +26,7 @@
 
 <br />
 
-[Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [Plugins](#-plugins) · [Security](#-security) · [日本語](#-日本語)
+[Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [API Docs](https://shunsukeHayashi.github.io/miyabi-mcp-bundle/) · [Plugins](#-plugins) · [Security](#-security) · [日本語](#-日本語)
 
 <br />
 

@@ -31,3 +31,4 @@ temp/
 
 # Package lock (optional - remove if you want to commit it)
 # package-lock.json
+docs/api
