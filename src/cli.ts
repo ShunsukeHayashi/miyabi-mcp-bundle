@@ -17,7 +17,7 @@ import { execSync } from 'child_process';
 import * as readline from 'readline';
 
 const VERSION = '3.1.0';
-const TOOL_COUNT = 102;
+const TOOL_COUNT = 103;
 
 // ANSI colors
 const colors = {
@@ -69,7 +69,7 @@ function printHelp() {
   print(`${c.bright}Quick Start:${c.reset}`);
   print(`  1. Run ${c.cyan}miyabi-mcp init${c.reset} to generate Claude Desktop config`);
   print(`  2. Restart Claude Desktop`);
-  print(`  3. Start using 102 MCP tools!`);
+  print(`  3. Start using 103 MCP tools!`);
   print('');
   print(`${c.bright}Documentation:${c.reset}`);
   print(`  ${c.blue}https://github.com/ShunsukeHayashi/miyabi-mcp-bundle${c.reset}`);

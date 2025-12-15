@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **102 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **103 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **102 Tools in One Package**
-The largest collection of MCP tools: 102 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **103 Tools in One Package**
+The largest collection of MCP tools: 103 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -87,7 +87,7 @@ Comprehensive system health validation and diagnostics.
 
 | Feature | Miyabi | Other MCP Servers |
 |---------|:------:|:-----------------:|
-| Total Tools | **102** | 10-30 |
+| Total Tools | **103** | 10-30 |
 | Security Sanitization | ✅ | ❌ |
 | Built-in Caching | ✅ | ❌ |
 | Health Check | ✅ | ❌ |
@@ -208,7 +208,7 @@ After configuration, try these commands in Claude Desktop:
 
 <div align="center">
 
-### 102 Tools Across 9 Categories + Health Check
+### 103 Tools Across 9 Categories + Health Check
 
 </div>
 
@@ -625,7 +625,7 @@ Claude Desktopを**強力な開発コマンドセンター**に変換する、�
 
 ### 🎯 特徴
 
-- **🚀 102 MCPツール** を9カテゴリ+ヘルスチェックに統合
+- **🚀 103 MCPツール** を9カテゴリ+ヘルスチェックに統合
 - **🔐 エンタープライズグレードのセキュリティ** - インジェクション対策、パストラバーサル防止
 - **⚡ インテリジェントキャッシュ** - 高速レスポンス
 - **38 AIエージェント** - コード生成、レビュー、デプロイ等
@@ -720,6 +720,6 @@ Made with ❤️ by [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
 
 <br />
 
-**🚀 102 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
+**🚀 103 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
 
 </div>
