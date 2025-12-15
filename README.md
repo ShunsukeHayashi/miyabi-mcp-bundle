@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **158 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **172 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -39,7 +39,7 @@
 │   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
 │   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
 │                                                                 │
-│    The All-in-One MCP Server for Claude Desktop  v3.5.0        │
+│    The All-in-One MCP Server for Claude Desktop  v3.6.0        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **158 Tools in One Package**
-The largest collection of MCP tools: 158 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **172 Tools in One Package**
+The largest collection of MCP tools: 172 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -87,7 +87,7 @@ Comprehensive system health validation and diagnostics.
 
 | Feature | Miyabi | Other MCP Servers |
 |---------|:------:|:-----------------:|
-| Total Tools | **158** | 10-30 |
+| Total Tools | **172** | 10-30 |
 | Security Sanitization | ✅ | ❌ |
 | Built-in Caching | ✅ | ❌ |
 | Health Check | ✅ | ❌ |
@@ -520,6 +520,52 @@ Validates: Git connectivity, GitHub API status, system resources, and overall he
 - **MySQL**: Popular open-source database
 
 **Security**: All queries are SELECT-only. Dangerous patterns (DROP, DELETE, etc.) are blocked.
+
+</details>
+
+<details>
+<summary><h3>⏰ Time Tools <code>4 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `time_current` | **NEW** Get current time in specified timezone |
+| `time_convert` | **NEW** Convert time between timezones |
+| `time_format` | **NEW** Format datetime with custom pattern |
+| `time_diff` | **NEW** Calculate difference between two times |
+
+</details>
+
+<details>
+<summary><h3>🔢 Calculator Tools <code>3 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `calc_expression` | **NEW** Evaluate mathematical expression safely |
+| `calc_unit_convert` | **NEW** Convert between units (length, weight, temp, etc.) |
+| `calc_statistics` | **NEW** Calculate statistics (mean, median, stddev, etc.) |
+
+</details>
+
+<details>
+<summary><h3>🧠 Sequential Thinking <code>3 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `think_step` | **NEW** Record a thinking step in sequential reasoning |
+| `think_branch` | **NEW** Create alternative thinking branch |
+| `think_summarize` | **NEW** Summarize a thinking session |
+
+</details>
+
+<details>
+<summary><h3>🎲 Generator Tools <code>4 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `gen_uuid` | **NEW** Generate UUID (v1 or v4) |
+| `gen_random` | **NEW** Generate random numbers |
+| `gen_hash` | **NEW** Generate hash (MD5, SHA256, etc.) |
+| `gen_password` | **NEW** Generate secure password with entropy |
 
 </details>
 

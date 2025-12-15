@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 158 tools across 17 categories:
+ * A comprehensive MCP server with 172 tools across 21 categories:
  * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
@@ -20,9 +20,13 @@
  * - Spec-Kit (9 tools) - Spec-Driven Development
  * - MCP Tool Discovery (3 tools) - Search and discover tools
  * - Database Foundation (6 tools) - SQLite/PostgreSQL/MySQL
+ * - Time Tools (4 tools) - Timezone, formatting, diff
+ * - Calculator Tools (3 tools) - Math, units, statistics
+ * - Sequential Thinking (3 tools) - Structured reasoning
+ * - Generator Tools (4 tools) - UUID, random, hash, password
  * + System Health (1 tool)
  *
- * @version 3.5.0
+ * @version 3.6.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -375,6 +379,28 @@ const tools: Tool[] = [
   { name: 'db_query', description: 'Execute read-only SQL query (SELECT only)', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, query: { type: 'string', description: 'SQL SELECT query' }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' }, limit: { type: 'number', description: 'Max rows (default 100)' } }, required: ['type', 'query'] } },
   { name: 'db_explain', description: 'Explain query execution plan', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, query: { type: 'string', description: 'SQL query to analyze' }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type', 'query'] } },
   { name: 'db_health', description: 'Check database health and stats', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type'] } },
+
+  // === Time Tools (4 tools) ===
+  { name: 'time_current', description: 'Get current time in specified timezone', inputSchema: { type: 'object', properties: { timezone: { type: 'string', description: 'Timezone (e.g., Asia/Tokyo, America/New_York, UTC)' }, format: { type: 'string', enum: ['iso', 'unix', 'human'], description: 'Output format' } } } },
+  { name: 'time_convert', description: 'Convert time between timezones', inputSchema: { type: 'object', properties: { time: { type: 'string', description: 'Time to convert (ISO8601 or unix timestamp)' }, from: { type: 'string', description: 'Source timezone' }, to: { type: 'string', description: 'Target timezone' } }, required: ['time', 'to'] } },
+  { name: 'time_format', description: 'Format datetime string', inputSchema: { type: 'object', properties: { time: { type: 'string', description: 'Time to format' }, format: { type: 'string', description: 'Format string (e.g., YYYY-MM-DD HH:mm:ss)' }, timezone: { type: 'string' } }, required: ['time', 'format'] } },
+  { name: 'time_diff', description: 'Calculate difference between two times', inputSchema: { type: 'object', properties: { start: { type: 'string', description: 'Start time' }, end: { type: 'string', description: 'End time (default: now)' }, unit: { type: 'string', enum: ['seconds', 'minutes', 'hours', 'days', 'weeks'], description: 'Output unit' } }, required: ['start'] } },
+
+  // === Calculator Tools (3 tools) ===
+  { name: 'calc_expression', description: 'Evaluate mathematical expression safely', inputSchema: { type: 'object', properties: { expression: { type: 'string', description: 'Math expression (e.g., 2+2, sqrt(16), sin(PI/2))' }, precision: { type: 'number', description: 'Decimal precision (default: 10)' } }, required: ['expression'] } },
+  { name: 'calc_unit_convert', description: 'Convert between units', inputSchema: { type: 'object', properties: { value: { type: 'number', description: 'Value to convert' }, from: { type: 'string', description: 'Source unit (e.g., km, miles, kg, lb, celsius, fahrenheit)' }, to: { type: 'string', description: 'Target unit' } }, required: ['value', 'from', 'to'] } },
+  { name: 'calc_statistics', description: 'Calculate statistics for a dataset', inputSchema: { type: 'object', properties: { data: { type: 'array', items: { type: 'number' }, description: 'Array of numbers' }, metrics: { type: 'array', items: { type: 'string', enum: ['mean', 'median', 'mode', 'stddev', 'variance', 'min', 'max', 'sum', 'count'] }, description: 'Metrics to calculate' } }, required: ['data'] } },
+
+  // === Sequential Thinking Tools (3 tools) ===
+  { name: 'think_step', description: 'Record a thinking step in sequential reasoning', inputSchema: { type: 'object', properties: { thought: { type: 'string', description: 'The thought content' }, type: { type: 'string', enum: ['observation', 'hypothesis', 'analysis', 'conclusion', 'question'], description: 'Type of thought' }, confidence: { type: 'number', description: 'Confidence level 0-1' }, sessionId: { type: 'string', description: 'Session ID to continue previous chain' } }, required: ['thought'] } },
+  { name: 'think_branch', description: 'Create a branch in thinking process for exploring alternatives', inputSchema: { type: 'object', properties: { sessionId: { type: 'string', description: 'Session ID' }, branchName: { type: 'string', description: 'Name for this branch' }, fromStep: { type: 'number', description: 'Step number to branch from' } }, required: ['sessionId', 'branchName'] } },
+  { name: 'think_summarize', description: 'Summarize a thinking session', inputSchema: { type: 'object', properties: { sessionId: { type: 'string', description: 'Session ID to summarize' }, includeAlternatives: { type: 'boolean', description: 'Include alternative branches' } }, required: ['sessionId'] } },
+
+  // === Generator Tools (4 tools) ===
+  { name: 'gen_uuid', description: 'Generate UUID', inputSchema: { type: 'object', properties: { version: { type: 'number', enum: [1, 4], description: 'UUID version (default: 4)' }, count: { type: 'number', description: 'Number of UUIDs to generate (max 100)' } } } },
+  { name: 'gen_random', description: 'Generate random numbers', inputSchema: { type: 'object', properties: { min: { type: 'number', description: 'Minimum value (default: 0)' }, max: { type: 'number', description: 'Maximum value (default: 100)' }, count: { type: 'number', description: 'Number of values (max 1000)' }, type: { type: 'string', enum: ['integer', 'float'], description: 'Number type' } }, required: [] } },
+  { name: 'gen_hash', description: 'Generate hash of input', inputSchema: { type: 'object', properties: { input: { type: 'string', description: 'String to hash' }, algorithm: { type: 'string', enum: ['md5', 'sha1', 'sha256', 'sha512'], description: 'Hash algorithm (default: sha256)' }, encoding: { type: 'string', enum: ['hex', 'base64'], description: 'Output encoding' } }, required: ['input'] } },
+  { name: 'gen_password', description: 'Generate secure password', inputSchema: { type: 'object', properties: { length: { type: 'number', description: 'Password length (8-128, default: 16)' }, uppercase: { type: 'boolean', description: 'Include uppercase letters' }, lowercase: { type: 'boolean', description: 'Include lowercase letters' }, numbers: { type: 'boolean', description: 'Include numbers' }, symbols: { type: 'boolean', description: 'Include symbols' }, excludeSimilar: { type: 'boolean', description: 'Exclude similar characters (0O1lI)' } } } },
 ];
 
 // ========== Tool Handlers ==========
@@ -536,6 +562,10 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('speckit_')) return await handleSpeckitTool(name, args);
     if (name.startsWith('mcp_')) return await handleMcpTool(name, args);
     if (name.startsWith('db_')) return await handleDbTool(name, args);
+    if (name.startsWith('time_')) return await handleTimeTool(name, args);
+    if (name.startsWith('calc_')) return await handleCalcTool(name, args);
+    if (name.startsWith('think_')) return await handleThinkTool(name, args);
+    if (name.startsWith('gen_')) return await handleGenTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -2795,11 +2825,660 @@ async function handleDbTool(name: string, args: Record<string, unknown>): Promis
   return { error: `Unknown db tool: ${name}` };
 }
 
+// ========== Time Tools Handler ==========
+async function handleTimeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // time_current - Get current time in timezone
+  if (name === 'time_current') {
+    const timezone = (args.timezone as string) || 'UTC';
+    const format = (args.format as string) || 'iso';
+
+    try {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+
+      if (format === 'unix') {
+        return { timestamp: Math.floor(now.getTime() / 1000), timezone };
+      } else if (format === 'human') {
+        const formatter = new Intl.DateTimeFormat('en-US', { ...options, weekday: 'long' });
+        return { time: formatter.format(now), timezone };
+      } else {
+        // ISO format
+        const formatter = new Intl.DateTimeFormat('sv-SE', options);
+        const formatted = formatter.format(now).replace(' ', 'T');
+        return { time: formatted, timezone, iso: now.toISOString() };
+      }
+    } catch (error) {
+      return { error: `Invalid timezone: ${timezone}` };
+    }
+  }
+
+  // time_convert - Convert between timezones
+  if (name === 'time_convert') {
+    const timeStr = args.time as string;
+    const fromTz = (args.from as string) || 'UTC';
+    const toTz = args.to as string;
+
+    try {
+      // Parse the input time
+      let date: Date;
+      if (/^\d+$/.test(timeStr)) {
+        // Unix timestamp
+        date = new Date(parseInt(timeStr) * 1000);
+      } else {
+        date = new Date(timeStr);
+      }
+
+      if (isNaN(date.getTime())) {
+        return { error: 'Invalid time format' };
+      }
+
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: toTz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+
+      const formatter = new Intl.DateTimeFormat('sv-SE', options);
+      return {
+        original: timeStr,
+        from: fromTz,
+        to: toTz,
+        converted: formatter.format(date).replace(' ', 'T'),
+        unix: Math.floor(date.getTime() / 1000)
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Conversion failed' };
+    }
+  }
+
+  // time_format - Format datetime string
+  if (name === 'time_format') {
+    const timeStr = args.time as string;
+    const formatStr = args.format as string;
+    const timezone = (args.timezone as string) || 'UTC';
+
+    try {
+      const date = new Date(timeStr);
+      if (isNaN(date.getTime())) {
+        return { error: 'Invalid time format' };
+      }
+
+      // Simple format string replacement
+      const parts: Record<string, string> = {};
+
+      const getPart = (opt: Intl.DateTimeFormatOptions): string => {
+        return new Intl.DateTimeFormat('en-US', { ...opt, timeZone: timezone }).format(date);
+      };
+
+      parts.YYYY = getPart({ year: 'numeric' });
+      parts.MM = getPart({ month: '2-digit' });
+      parts.DD = getPart({ day: '2-digit' });
+      parts.HH = getPart({ hour: '2-digit', hour12: false }).padStart(2, '0');
+      parts.mm = getPart({ minute: '2-digit' }).padStart(2, '0');
+      parts.ss = getPart({ second: '2-digit' }).padStart(2, '0');
+
+      let result = formatStr;
+      for (const [key, value] of Object.entries(parts)) {
+        result = result.replace(key, value);
+      }
+
+      return { formatted: result, original: timeStr, timezone };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Format failed' };
+    }
+  }
+
+  // time_diff - Calculate time difference
+  if (name === 'time_diff') {
+    const startStr = args.start as string;
+    const endStr = (args.end as string) || new Date().toISOString();
+    const unit = (args.unit as string) || 'seconds';
+
+    try {
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return { error: 'Invalid time format' };
+      }
+
+      const diffMs = end.getTime() - start.getTime();
+      const divisors: Record<string, number> = {
+        seconds: 1000,
+        minutes: 60000,
+        hours: 3600000,
+        days: 86400000,
+        weeks: 604800000
+      };
+
+      const divisor = divisors[unit] || 1000;
+      const diff = diffMs / divisor;
+
+      return {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        difference: diff,
+        unit,
+        milliseconds: diffMs
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Diff calculation failed' };
+    }
+  }
+
+  return { error: `Unknown time tool: ${name}` };
+}
+
+// ========== Calculator Tools Handler ==========
+async function handleCalcTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // calc_expression - Safe math expression evaluation
+  if (name === 'calc_expression') {
+    const expression = args.expression as string;
+    const precision = Math.min(Math.max((args.precision as number) || 10, 0), 20);
+
+    // Security: Only allow safe math operations
+    const safeExpression = expression
+      .replace(/\s+/g, '')
+      .toLowerCase();
+
+    // Validate - only allow numbers, operators, and math functions
+    const allowedPattern = /^[\d+\-*/().%^e,\s]*(sqrt|sin|cos|tan|log|ln|abs|ceil|floor|round|pow|exp|pi|e)*[\d+\-*/().%^e,\s]*$/i;
+    if (!allowedPattern.test(safeExpression)) {
+      return { error: 'Invalid expression. Only math operations allowed.' };
+    }
+
+    // Block dangerous patterns
+    if (/[a-z]{4,}/i.test(safeExpression.replace(/(sqrt|sin|cos|tan|log|abs|ceil|floor|round|pow|exp)/gi, ''))) {
+      return { error: 'Invalid expression' };
+    }
+
+    try {
+      // Build safe evaluator
+      const mathFns: Record<string, unknown> = {
+        sqrt: Math.sqrt,
+        sin: Math.sin,
+        cos: Math.cos,
+        tan: Math.tan,
+        log: Math.log10,
+        ln: Math.log,
+        abs: Math.abs,
+        ceil: Math.ceil,
+        floor: Math.floor,
+        round: Math.round,
+        pow: Math.pow,
+        exp: Math.exp,
+        PI: Math.PI,
+        E: Math.E
+      };
+
+      let evalExpr = safeExpression
+        .replace(/pi/gi, String(Math.PI))
+        .replace(/\^/g, '**');
+
+      // Replace function calls
+      for (const [fn, impl] of Object.entries(mathFns)) {
+        if (typeof impl === 'function') {
+          const regex = new RegExp(`${fn}\\(([^)]+)\\)`, 'gi');
+          evalExpr = evalExpr.replace(regex, (_, arg) => {
+            const argVal = parseFloat(arg);
+            if (!isNaN(argVal)) {
+              return String((impl as (x: number) => number)(argVal));
+            }
+            return _;
+          });
+        }
+      }
+
+      // Final safety check - only numbers and operators
+      if (!/^[\d+\-*/().%\s*e]+$/.test(evalExpr)) {
+        return { error: 'Invalid expression after parsing' };
+      }
+
+      // Use Function constructor for safe eval (no access to scope)
+      const result = new Function(`return (${evalExpr})`)();
+
+      if (typeof result !== 'number' || !isFinite(result)) {
+        return { error: 'Result is not a valid number' };
+      }
+
+      return {
+        expression,
+        result: parseFloat(result.toFixed(precision)),
+        precision
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Evaluation failed' };
+    }
+  }
+
+  // calc_unit_convert - Unit conversion
+  if (name === 'calc_unit_convert') {
+    const value = args.value as number;
+    const from = (args.from as string).toLowerCase();
+    const to = (args.to as string).toLowerCase();
+
+    // Temperature units (special handling - not ratio-based)
+    const tempUnits: Record<string, string> = {
+      celsius: 'c', c: 'c',
+      fahrenheit: 'f', f: 'f',
+      kelvin: 'k', k: 'k'
+    };
+
+    // Check if temperature conversion
+    if (from in tempUnits && to in tempUnits) {
+      const fromUnit = tempUnits[from];
+      const toUnit = tempUnits[to];
+
+      let celsius: number;
+      // Convert to Celsius first
+      if (fromUnit === 'c') celsius = value;
+      else if (fromUnit === 'f') celsius = (value - 32) * 5 / 9;
+      else celsius = value - 273.15; // Kelvin
+
+      // Convert from Celsius to target
+      let result: number;
+      if (toUnit === 'c') result = celsius;
+      else if (toUnit === 'f') result = celsius * 9 / 5 + 32;
+      else result = celsius + 273.15; // Kelvin
+
+      return { value, from, to, result: parseFloat(result.toFixed(4)) };
+    }
+
+    // Conversion tables (to base unit)
+    const conversions: Record<string, Record<string, number>> = {
+      // Length (base: meters)
+      length: {
+        m: 1, meter: 1, meters: 1,
+        km: 1000, kilometer: 1000, kilometers: 1000,
+        cm: 0.01, centimeter: 0.01,
+        mm: 0.001, millimeter: 0.001,
+        mi: 1609.344, mile: 1609.344, miles: 1609.344,
+        yd: 0.9144, yard: 0.9144, yards: 0.9144,
+        ft: 0.3048, foot: 0.3048, feet: 0.3048,
+        in: 0.0254, inch: 0.0254, inches: 0.0254
+      },
+      // Weight (base: grams)
+      weight: {
+        g: 1, gram: 1, grams: 1,
+        kg: 1000, kilogram: 1000,
+        mg: 0.001, milligram: 0.001,
+        lb: 453.592, pound: 453.592, pounds: 453.592,
+        oz: 28.3495, ounce: 28.3495, ounces: 28.3495,
+        ton: 1000000, t: 1000000
+      },
+      // Volume (base: liters)
+      volume: {
+        l: 1, liter: 1, liters: 1,
+        ml: 0.001, milliliter: 0.001,
+        gal: 3.78541, gallon: 3.78541, gallons: 3.78541,
+        qt: 0.946353, quart: 0.946353,
+        pt: 0.473176, pint: 0.473176,
+        cup: 0.236588, cups: 0.236588,
+        floz: 0.0295735
+      },
+      // Data (base: bytes)
+      data: {
+        b: 1, byte: 1, bytes: 1,
+        kb: 1024, kilobyte: 1024,
+        mb: 1048576, megabyte: 1048576,
+        gb: 1073741824, gigabyte: 1073741824,
+        tb: 1099511627776, terabyte: 1099511627776
+      }
+    };
+
+    // Find the category for these units
+    let category: string | null = null;
+    for (const [cat, units] of Object.entries(conversions)) {
+      if (from in units && to in units) {
+        category = cat;
+        break;
+      }
+    }
+
+    if (!category) {
+      return { error: `Cannot convert between ${from} and ${to}` };
+    }
+
+    // Standard conversion
+    const units = conversions[category];
+    const baseValue = value * units[from];
+    const result = baseValue / units[to];
+
+    return { value, from, to, result: parseFloat(result.toFixed(6)) };
+  }
+
+  // calc_statistics - Statistical calculations
+  if (name === 'calc_statistics') {
+    const data = args.data as number[];
+    const metrics = (args.metrics as string[]) || ['mean', 'median', 'min', 'max', 'count'];
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return { error: 'Data must be a non-empty array of numbers' };
+    }
+
+    const sorted = [...data].sort((a, b) => a - b);
+    const n = data.length;
+    const sum = data.reduce((a, b) => a + b, 0);
+    const mean = sum / n;
+
+    const results: Record<string, number> = {};
+
+    for (const metric of metrics) {
+      switch (metric) {
+        case 'mean':
+          results.mean = parseFloat(mean.toFixed(6));
+          break;
+        case 'median':
+          results.median = n % 2 === 0
+            ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+            : sorted[Math.floor(n / 2)];
+          break;
+        case 'mode':
+          const freq: Record<number, number> = {};
+          let maxFreq = 0, mode = data[0];
+          for (const x of data) {
+            freq[x] = (freq[x] || 0) + 1;
+            if (freq[x] > maxFreq) { maxFreq = freq[x]; mode = x; }
+          }
+          results.mode = mode;
+          break;
+        case 'stddev':
+          const variance = data.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / n;
+          results.stddev = parseFloat(Math.sqrt(variance).toFixed(6));
+          break;
+        case 'variance':
+          results.variance = parseFloat((data.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / n).toFixed(6));
+          break;
+        case 'min':
+          results.min = sorted[0];
+          break;
+        case 'max':
+          results.max = sorted[n - 1];
+          break;
+        case 'sum':
+          results.sum = sum;
+          break;
+        case 'count':
+          results.count = n;
+          break;
+      }
+    }
+
+    return { data: { count: n }, statistics: results };
+  }
+
+  return { error: `Unknown calc tool: ${name}` };
+}
+
+// ========== Sequential Thinking Handler ==========
+// In-memory storage for thinking sessions
+const thinkingSessions = new Map<string, {
+  steps: Array<{ id: number; thought: string; type: string; confidence: number; timestamp: string }>;
+  branches: Map<string, { fromStep: number; steps: Array<{ id: number; thought: string; type: string; confidence: number; timestamp: string }> }>;
+  created: string;
+}>();
+
+async function handleThinkTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // think_step - Record a thinking step
+  if (name === 'think_step') {
+    const thought = args.thought as string;
+    const type = (args.type as string) || 'observation';
+    const confidence = Math.min(Math.max((args.confidence as number) || 0.5, 0), 1);
+    let sessionId = args.sessionId as string;
+
+    // Create or get session
+    if (!sessionId) {
+      sessionId = `think_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      thinkingSessions.set(sessionId, {
+        steps: [],
+        branches: new Map(),
+        created: new Date().toISOString()
+      });
+    }
+
+    const session = thinkingSessions.get(sessionId);
+    if (!session) {
+      return { error: `Session not found: ${sessionId}` };
+    }
+
+    const step = {
+      id: session.steps.length + 1,
+      thought,
+      type,
+      confidence,
+      timestamp: new Date().toISOString()
+    };
+
+    session.steps.push(step);
+
+    return {
+      sessionId,
+      step,
+      totalSteps: session.steps.length,
+      hint: session.steps.length === 1 ? 'Use sessionId in future calls to continue this chain' : undefined
+    };
+  }
+
+  // think_branch - Create alternative thinking branch
+  if (name === 'think_branch') {
+    const sessionId = args.sessionId as string;
+    const branchName = args.branchName as string;
+    const fromStep = (args.fromStep as number) || 0;
+
+    const session = thinkingSessions.get(sessionId);
+    if (!session) {
+      return { error: `Session not found: ${sessionId}` };
+    }
+
+    if (session.branches.has(branchName)) {
+      return { error: `Branch ${branchName} already exists` };
+    }
+
+    session.branches.set(branchName, {
+      fromStep,
+      steps: []
+    });
+
+    return {
+      sessionId,
+      branchName,
+      fromStep,
+      mainSteps: session.steps.length,
+      totalBranches: session.branches.size
+    };
+  }
+
+  // think_summarize - Summarize thinking session
+  if (name === 'think_summarize') {
+    const sessionId = args.sessionId as string;
+    const includeAlternatives = args.includeAlternatives as boolean ?? true;
+
+    const session = thinkingSessions.get(sessionId);
+    if (!session) {
+      return { error: `Session not found: ${sessionId}` };
+    }
+
+    const observations = session.steps.filter(s => s.type === 'observation');
+    const hypotheses = session.steps.filter(s => s.type === 'hypothesis');
+    const analyses = session.steps.filter(s => s.type === 'analysis');
+    const conclusions = session.steps.filter(s => s.type === 'conclusion');
+    const questions = session.steps.filter(s => s.type === 'question');
+
+    const avgConfidence = session.steps.length > 0
+      ? session.steps.reduce((sum, s) => sum + s.confidence, 0) / session.steps.length
+      : 0;
+
+    const summary: Record<string, unknown> = {
+      sessionId,
+      created: session.created,
+      totalSteps: session.steps.length,
+      breakdown: {
+        observations: observations.length,
+        hypotheses: hypotheses.length,
+        analyses: analyses.length,
+        conclusions: conclusions.length,
+        questions: questions.length
+      },
+      averageConfidence: parseFloat(avgConfidence.toFixed(2)),
+      steps: session.steps
+    };
+
+    if (includeAlternatives && session.branches.size > 0) {
+      summary.branches = Array.from(session.branches.entries()).map(([name, branch]) => ({
+        name,
+        fromStep: branch.fromStep,
+        steps: branch.steps.length
+      }));
+    }
+
+    // Extract key conclusions
+    if (conclusions.length > 0) {
+      summary.keyConclusions = conclusions.map(c => ({
+        thought: c.thought,
+        confidence: c.confidence
+      }));
+    }
+
+    return summary;
+  }
+
+  return { error: `Unknown think tool: ${name}` };
+}
+
+// ========== Generator Tools Handler ==========
+async function handleGenTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // gen_uuid - Generate UUID
+  if (name === 'gen_uuid') {
+    const version = (args.version as number) || 4;
+    const count = Math.min(Math.max((args.count as number) || 1, 1), 100);
+
+    const uuids: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      if (version === 4) {
+        // UUID v4 (random)
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+        bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant
+
+        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        uuids.push(
+          `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+        );
+      } else {
+        // UUID v1 (time-based approximation)
+        const now = Date.now();
+        const uuid = 'xxxxxxxx-xxxx-1xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (now + Math.random() * 16) % 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        uuids.push(uuid);
+      }
+    }
+
+    return count === 1 ? { uuid: uuids[0], version } : { uuids, version, count };
+  }
+
+  // gen_random - Generate random numbers
+  if (name === 'gen_random') {
+    const min = (args.min as number) ?? 0;
+    const max = (args.max as number) ?? 100;
+    const count = Math.min(Math.max((args.count as number) || 1, 1), 1000);
+    const type = (args.type as string) || 'integer';
+
+    const values: number[] = [];
+
+    for (let i = 0; i < count; i++) {
+      if (type === 'float') {
+        values.push(parseFloat((Math.random() * (max - min) + min).toFixed(6)));
+      } else {
+        values.push(Math.floor(Math.random() * (max - min + 1)) + min);
+      }
+    }
+
+    return count === 1
+      ? { value: values[0], min, max, type }
+      : { values, min, max, type, count };
+  }
+
+  // gen_hash - Generate hash
+  if (name === 'gen_hash') {
+    const input = args.input as string;
+    const algorithm = (args.algorithm as string) || 'sha256';
+    const encoding = (args.encoding as string) || 'hex';
+
+    const validAlgorithms = ['md5', 'sha1', 'sha256', 'sha512'];
+    if (!validAlgorithms.includes(algorithm)) {
+      return { error: `Invalid algorithm. Use: ${validAlgorithms.join(', ')}` };
+    }
+
+    const hash = createHash(algorithm).update(input).digest(encoding as 'hex' | 'base64');
+
+    return { input: input.slice(0, 50) + (input.length > 50 ? '...' : ''), algorithm, encoding, hash };
+  }
+
+  // gen_password - Generate secure password
+  if (name === 'gen_password') {
+    const length = Math.min(Math.max((args.length as number) || 16, 8), 128);
+    const uppercase = args.uppercase !== false;
+    const lowercase = args.lowercase !== false;
+    const numbers = args.numbers !== false;
+    const symbols = args.symbols !== false;
+    const excludeSimilar = args.excludeSimilar === true;
+
+    let chars = '';
+    if (uppercase) chars += excludeSimilar ? 'ABCDEFGHJKLMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (lowercase) chars += excludeSimilar ? 'abcdefghjkmnpqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
+    if (numbers) chars += excludeSimilar ? '23456789' : '0123456789';
+    if (symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    if (chars.length === 0) {
+      return { error: 'At least one character set must be enabled' };
+    }
+
+    // Use crypto for secure random
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars[bytes[i] % chars.length];
+    }
+
+    // Calculate entropy
+    const entropy = Math.floor(length * Math.log2(chars.length));
+
+    return {
+      password,
+      length,
+      entropy: `${entropy} bits`,
+      strength: entropy < 40 ? 'weak' : entropy < 60 ? 'fair' : entropy < 80 ? 'strong' : 'very strong'
+    };
+  }
+
+  return { error: `Unknown gen tool: ${name}` };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.5.0',
+    version: '3.6.0',
   },
   {
     capabilities: {
@@ -2829,7 +3508,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   console.error('');
   console.error('┌────────────────────────────────────────────────┐');
-  console.error('│  🌸 Miyabi MCP Bundle v3.5.0                   │');
+  console.error('│  🌸 Miyabi MCP Bundle v3.6.0                   │');
   console.error('│  The Most Comprehensive MCP Server             │');
   console.error('├────────────────────────────────────────────────┤');
   console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);

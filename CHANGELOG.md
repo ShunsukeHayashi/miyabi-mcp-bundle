@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2025-12-15
+
+### Added
+- **⏰ Utility Tools** - Time, Calculator, Thinking, Generator (Issue #14)
+- **172 Total Tools** - Expansion from 158 to 172 tools (+14)
+- **4 New Categories**:
+  - **Time Tools (4)**: Timezone, formatting, conversion, diff
+  - **Calculator Tools (3)**: Expression eval, unit conversion, statistics
+  - **Sequential Thinking (3)**: Step, branch, summarize
+  - **Generator Tools (4)**: UUID, random, hash, password
+- **14 New Utility Tools**:
+  - `time_current` - Get current time in specified timezone
+  - `time_convert` - Convert time between timezones
+  - `time_format` - Format datetime with custom pattern
+  - `time_diff` - Calculate difference between two times
+  - `calc_expression` - Evaluate mathematical expression safely
+  - `calc_unit_convert` - Convert between units (length, weight, temp, volume, data)
+  - `calc_statistics` - Calculate statistics (mean, median, stddev, variance)
+  - `think_step` - Record a thinking step in sequential reasoning
+  - `think_branch` - Create alternative thinking branch
+  - `think_summarize` - Summarize a thinking session
+  - `gen_uuid` - Generate UUID (v1 or v4)
+  - `gen_random` - Generate random numbers (integer or float)
+  - `gen_hash` - Generate hash (MD5, SHA1, SHA256, SHA512)
+  - `gen_password` - Generate secure password with entropy calculation
+
+### Security
+- Safe math expression evaluation (no eval, AST-based)
+- Cryptographically secure random generation (crypto.getRandomValues)
+- Password entropy calculation and strength rating
+
+### Changed
+- Categories increased from 17 to 21
+- Added structured thinking capabilities for complex reasoning
+
 ## [3.5.0] - 2025-12-15
 
 ### Added
