@@ -1,6 +1,6 @@
 {
   "name": "miyabi-mcp-bundle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Miyabi All-in-One MCP Server - Complete monitoring and control toolkit with 75+ tools for Claude Desktop & AI agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
