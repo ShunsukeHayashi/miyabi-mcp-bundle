@@ -1,0 +1,69 @@
+{
+  "name": "miyabi-mcp-bundle",
+  "version": "1.0.0",
+  "description": "Miyabi All-in-One MCP Server - Complete monitoring and control toolkit with 75+ tools for Claude Desktop & AI agents",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "miyabi-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "vitest"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "miyabi",
+    "claude",
+    "claude-desktop",
+    "ai-agent",
+    "monitoring",
+    "git",
+    "tmux",
+    "github",
+    "devtools",
+    "automation"
+  ],
+  "author": "Shunsuke Hayashi <shunsuke@miyabi.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShunsukeHayashi/miyabi-mcp-bundle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ShunsukeHayashi/miyabi-mcp-bundle/issues"
+  },
+  "homepage": "https://github.com/ShunsukeHayashi/miyabi-mcp-bundle#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@octokit/rest": "^20.0.2",
+    "glob": "^10.3.10",
+    "simple-git": "^3.27.0",
+    "systeminformation": "^5.21.20",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

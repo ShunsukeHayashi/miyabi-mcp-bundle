@@ -1,0 +1,22 @@
+# Source files (dist only)
+src/
+tsconfig.json
+
+# Development
+.github/
+.vscode/
+.idea/
+coverage/
+*.test.ts
+vitest.config.ts
+
+# Documentation (keep README)
+docs/
+examples/
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Misc
+.DS_Store
+*.log
+.env*
