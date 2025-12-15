@@ -1,0 +1,3 @@
+[submodule "plugins"]
+	path = plugins
+	url = https://github.com/ShunsukeHayashi/miyabi-claude-plugins.git
