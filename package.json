@@ -1,7 +1,7 @@
 {
   "name": "miyabi-mcp-bundle",
-  "version": "2.1.0",
-  "description": "Miyabi All-in-One MCP Server - 76 MCP Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks for Claude Desktop & AI agents",
+  "version": "3.0.0",
+  "description": "🚀 The Ultimate All-in-One MCP Server - 100+ tools for Claude Desktop & AI Agents. Git, GitHub, System Monitoring, Tmux, Logs, Network, Process, File, and more! Enterprise-grade security with input sanitization.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -14,30 +14,43 @@
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build",
-    "lint": "eslint 'src/**/*.ts'",
-    "test": "vitest"
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "miyabi",
     "claude",
-    "claude-code",
     "claude-desktop",
+    "anthropic",
     "ai-agent",
-    "ai-agents",
-    "skills",
-    "plugins",
+    "ai-tools",
+    "llm",
+    "llm-tools",
+    "miyabi",
     "monitoring",
-    "git",
-    "tmux",
-    "github",
     "devtools",
+    "developer-tools",
     "automation",
-    "rust",
-    "typescript"
+    "git",
+    "github",
+    "github-api",
+    "tmux",
+    "system-monitor",
+    "process-monitor",
+    "network-monitor",
+    "log-aggregator",
+    "file-watcher",
+    "cli",
+    "typescript",
+    "nodejs"
   ],
-  "author": "Shunsuke Hayashi <shunsuke@miyabi.dev>",
+  "author": {
+    "name": "Shunsuke Hayashi",
+    "email": "shunsuke@miyabi.dev",
+    "url": "https://github.com/ShunsukeHayashi"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -47,9 +60,18 @@
     "url": "https://github.com/ShunsukeHayashi/miyabi-mcp-bundle/issues"
   },
   "homepage": "https://github.com/ShunsukeHayashi/miyabi-mcp-bundle#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/ShunsukeHayashi"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "@octokit/rest": "^20.0.2",
@@ -60,17 +82,17 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.0.0",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+    "vitest": "^1.0.0"
   },
   "files": [
     "dist",
-    "claude-plugins",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ]
 }

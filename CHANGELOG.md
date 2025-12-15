@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-12-15
+
+### Added
+- **🚀 102 Total Tools** - Massive expansion from 82 to 102 tools
+- **Enterprise-grade Security**:
+  - `sanitizeShellArg()` - Prevent command injection attacks
+  - `sanitizePath()` - Prevent path traversal attacks
+  - `commandExists()` - Safe command validation
+  - `isValidHostname()` - Hostname validation for network tools
+  - `isValidPid()` - PID validation for process tools
+- **Intelligent Caching System**:
+  - `SimpleCache` class with TTL support
+  - Reduces redundant API calls and system queries
+  - Configurable expiration times
+- **15 Git Tools** (+3 new):
+  - `git_show` - Show commit details and diffs
+  - `git_tag_list` - List all tags with metadata
+  - `git_contributors` - Get repository contributors with stats
+- **10 Tmux Tools** (+1 new):
+  - `tmux_session_info` - Detailed session information
+- **7 Log Tools** (+1 new):
+  - `log_stats` - Log file statistics and analysis
+- **10 Resource Tools** (+2 new):
+  - `resource_battery` - Battery status and health
+  - `resource_temperature` - CPU/GPU temperature monitoring
+- **12 Network Tools** (+4 new):
+  - `network_port_check` - Check if port is open on host
+  - `network_public_ip` - Get public IP address
+  - `network_wifi_info` - WiFi connection details
+  - Enhanced DNS lookup with IPv4/IPv6 support
+- **12 Process Tools** (+4 new):
+  - `process_ports` - Processes with network ports
+  - `process_cpu_history` - CPU usage history
+  - `process_memory_detail` - Detailed memory breakdown
+  - Enhanced kill with safety confirmations
+- **10 File Tools** (+4 new):
+  - `file_checksum` - MD5/SHA256 file checksums
+  - `file_size_summary` - Directory size analysis
+  - `file_duplicates` - Find duplicate files
+  - `file_read` - Safe file reading with size limits
+- **18 GitHub Tools** (+4 new):
+  - `github_repo_info` - Repository metadata and stats
+  - `github_list_releases` - Release history
+  - `github_list_branches` - Branch listing with protection status
+  - `github_compare_commits` - Compare two commits/branches
+- **Health Check System**:
+  - `health_check` - Comprehensive system health validation
+  - Validates Git, GitHub, system resources
+
+### Changed
+- Complete rewrite with modular architecture
+- All handlers now use security sanitization
+- Improved error messages with actionable suggestions
+- Better TypeScript types and validation
+
+### Security
+- All shell commands sanitized against injection
+- Path traversal protection on all file operations
+- Input validation on all user-provided data
+- Safe defaults for all operations
+
 ## [2.1.0] - 2025-12-15
 
 ### Added
