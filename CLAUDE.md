@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **103 tools** across 9 categories + health check for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~1150 lines).
+Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **120 tools** across 11 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~1500 lines).
 
-### Key Features (v3.0.0)
-- **103 MCP Tools** across 9 categories
-- **Enterprise-grade Security**: Input sanitization, path traversal protection
-- **Intelligent Caching**: Built-in cache with TTL support
+### Key Features (v3.2.0)
+- **120 MCP Tools** across 11 categories
+- **Enterprise-grade Security**: Input sanitization, path traversal protection, symlink attack prevention
+- **Intelligent Caching**: Built-in LRU cache with TTL support
 - **Health Check System**: Comprehensive system validation
+- **Cross-Platform**: Linux systemd support, Windows Event Log support
 
 ## Commands
 

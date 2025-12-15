@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **103 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **120 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -39,7 +39,7 @@
 │   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
 │   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
 │                                                                 │
-│    The All-in-One MCP Server for Claude Desktop  v3.0.0        │
+│    The All-in-One MCP Server for Claude Desktop  v3.2.0        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **103 Tools in One Package**
-The largest collection of MCP tools: 103 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **120 Tools in One Package**
+The largest collection of MCP tools: 120 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -87,7 +87,7 @@ Comprehensive system health validation and diagnostics.
 
 | Feature | Miyabi | Other MCP Servers |
 |---------|:------:|:-----------------:|
-| Total Tools | **103** | 10-30 |
+| Total Tools | **120** | 10-30 |
 | Security Sanitization | ✅ | ❌ |
 | Built-in Caching | ✅ | ❌ |
 | Health Check | ✅ | ❌ |
@@ -208,12 +208,12 @@ After configuration, try these commands in Claude Desktop:
 
 <div align="center">
 
-### 103 Tools Across 9 Categories + Health Check
+### 120 Tools Across 11 Categories
 
 </div>
 
 <details open>
-<summary><h3>🔀 Git Inspector <code>15 tools</code></h3></summary>
+<summary><h3>🔀 Git Inspector <code>19 tools</code></h3></summary>
 
 | Tool | Description |
 |:-----|:------------|
@@ -229,9 +229,13 @@ After configuration, try these commands in Claude Desktop:
 | `git_file_history` | Get commit history for a specific file |
 | `git_stash_list` | List all git stashes |
 | `git_blame` | Get blame info for files with line range |
-| `git_show` | **NEW** Show commit details and diffs |
-| `git_tag_list` | **NEW** List all tags with metadata |
-| `git_contributors` | **NEW** Get repository contributors with stats |
+| `git_show` | Show commit details and diffs |
+| `git_tag_list` | List all tags with metadata |
+| `git_contributors` | Get repository contributors with stats |
+| `git_conflicts` | **NEW** Detect merge conflicts in worktree |
+| `git_submodule_status` | **NEW** List submodule status |
+| `git_lfs_status` | **NEW** Git LFS status (requires git-lfs) |
+| `git_hooks_list` | **NEW** List git hooks in repository |
 
 </details>
 
@@ -287,7 +291,7 @@ After configuration, try these commands in Claude Desktop:
 </details>
 
 <details>
-<summary><h3>🌐 Network Inspector <code>12 tools</code></h3></summary>
+<summary><h3>🌐 Network Inspector <code>15 tools</code></h3></summary>
 
 | Tool | Description |
 |:-----|:------------|
@@ -300,14 +304,17 @@ After configuration, try these commands in Claude Desktop:
 | `network_bandwidth` | Get bandwidth usage |
 | `network_overview` | Get network overview |
 | `network_dns_lookup` | DNS lookup with IPv4/IPv6 |
-| `network_port_check` | **NEW** Check if port is open on host |
-| `network_public_ip` | **NEW** Get public IP address |
-| `network_wifi_info` | **NEW** WiFi connection details |
+| `network_port_check` | Check if port is open on host |
+| `network_public_ip` | Get public IP address |
+| `network_wifi_info` | WiFi connection details |
+| `network_route_table` | **NEW** Show routing table |
+| `network_ssl_check` | **NEW** Check SSL certificate for a host |
+| `network_traceroute` | **NEW** Traceroute to a host |
 
 </details>
 
 <details>
-<summary><h3>⚙️ Process Inspector <code>12 tools</code></h3></summary>
+<summary><h3>⚙️ Process Inspector <code>14 tools</code></h3></summary>
 
 | Tool | Description |
 |:-----|:------------|
@@ -320,9 +327,11 @@ After configuration, try these commands in Claude Desktop:
 | `process_children` | Get child processes |
 | `process_top` | Get top processes by CPU/memory |
 | `process_kill` | Kill process with safety confirmation |
-| `process_ports` | **NEW** Processes with network ports |
-| `process_cpu_history` | **NEW** CPU usage history |
-| `process_memory_detail` | **NEW** Detailed memory breakdown |
+| `process_ports` | Processes with network ports |
+| `process_cpu_history` | CPU usage history |
+| `process_memory_detail` | Detailed memory breakdown |
+| `process_threads` | **NEW** List threads for a process |
+| `process_io_stats` | **NEW** I/O statistics for a process (Linux) |
 
 </details>
 
@@ -361,7 +370,7 @@ After configuration, try these commands in Claude Desktop:
 </details>
 
 <details>
-<summary><h3>🐙 GitHub Integration <code>18 tools</code></h3></summary>
+<summary><h3>🐙 GitHub Integration <code>21 tools</code></h3></summary>
 
 | Tool | Description |
 |:-----|:------------|
@@ -379,10 +388,13 @@ After configuration, try these commands in Claude Desktop:
 | `github_list_milestones` | List milestones |
 | `github_list_workflows` | List GitHub Actions workflows |
 | `github_list_workflow_runs` | List recent workflow runs |
-| `github_repo_info` | **NEW** Repository metadata and stats |
-| `github_list_releases` | **NEW** Release history |
-| `github_list_branches` | **NEW** Branch listing with protection |
-| `github_compare_commits` | **NEW** Compare commits/branches |
+| `github_repo_info` | Repository metadata and stats |
+| `github_list_releases` | Release history |
+| `github_list_branches` | Branch listing with protection |
+| `github_compare_commits` | Compare commits/branches |
+| `github_list_pr_reviews` | **NEW** List reviews for a pull request |
+| `github_create_review` | **NEW** Create a review for a pull request |
+| `github_submit_review` | **NEW** Submit a pending review |
 
 </details>
 
@@ -391,9 +403,30 @@ After configuration, try these commands in Claude Desktop:
 
 | Tool | Description |
 |:-----|:------------|
-| `health_check` | **NEW** Comprehensive system health validation |
+| `health_check` | Comprehensive system health validation |
 
 Validates: Git connectivity, GitHub API status, system resources, and overall health.
+
+</details>
+
+<details>
+<summary><h3>🐧 Linux systemd <code>3 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `linux_systemd_units` | **NEW** List systemd units (Linux only) |
+| `linux_systemd_status` | **NEW** Get status of a systemd unit |
+| `linux_journal_search` | **NEW** Search systemd journal |
+
+</details>
+
+<details>
+<summary><h3>🪟 Windows <code>2 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `windows_service_status` | **NEW** Get Windows service status |
+| `windows_eventlog_search` | **NEW** Search Windows Event Log |
 
 </details>
 
@@ -625,7 +658,7 @@ Claude Desktopを**強力な開発コマンドセンター**に変換する、�
 
 ### 🎯 特徴
 
-- **🚀 103 MCPツール** を9カテゴリ+ヘルスチェックに統合
+- **🚀 120 MCPツール** を11カテゴリに統合
 - **🔐 エンタープライズグレードのセキュリティ** - インジェクション対策、パストラバーサル防止
 - **⚡ インテリジェントキャッシュ** - 高速レスポンス
 - **38 AIエージェント** - コード生成、レビュー、デプロイ等
@@ -678,16 +711,18 @@ npm install -g miyabi-mcp-bundle
 
 | カテゴリ | ツール数 | 説明 |
 |:---------|:--------:|:-----|
-| 🔀 **Git Inspector** | 15 | Git状態、ブランチ、差分、履歴、タグ、貢献者 |
+| 🔀 **Git Inspector** | 19 | Git状態、ブランチ、差分、履歴、タグ、貢献者、コンフリクト |
 | 📺 **Tmux Monitor** | 10 | セッション、ウィンドウ、ペイン管理 |
 | 📋 **Log Aggregator** | 7 | ログ検索、エラー、警告、統計 |
 | 💻 **Resource Monitor** | 10 | CPU、メモリ、ディスク、バッテリー、温度 |
-| 🌐 **Network Inspector** | 12 | インターフェース、接続、ポート、DNS、WiFi |
-| ⚙️ **Process Inspector** | 12 | プロセス一覧、ツリー、詳細、キル |
+| 🌐 **Network Inspector** | 15 | インターフェース、接続、ポート、DNS、SSL証明書、traceroute |
+| ⚙️ **Process Inspector** | 14 | プロセス一覧、ツリー、詳細、スレッド、I/O |
 | 📁 **File Watcher** | 10 | ファイル変更、検索、比較、チェックサム |
 | 🤖 **Claude Monitor** | 8 | Claude Desktop設定、ログ、MCP状態 |
-| 🐙 **GitHub Integration** | 18 | Issue、PR、ラベル、リリース、ブランチ |
+| 🐙 **GitHub Integration** | 21 | Issue、PR、レビュー、ラベル、リリース |
 | 🏥 **Health Check** | 1 | システムヘルス検証 |
+| 🐧 **Linux systemd** | 3 | systemdユニット、ジャーナル |
+| 🪟 **Windows** | 2 | サービス状態、イベントログ |
 
 ---
 
@@ -720,6 +755,6 @@ Made with ❤️ by [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
 
 <br />
 
-**🚀 103 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
+**🚀 120 Tools | 🔐 Enterprise Security | ⚡ Zero Config | 🌍 Cross-Platform**
 
 </div>

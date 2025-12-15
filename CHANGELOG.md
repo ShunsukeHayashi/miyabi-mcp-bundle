@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2025-12-15
+
+### Added
+- **🚀 120 Total Tools** - Major expansion from 103 to 120 tools (+17)
+- **2 New Categories**:
+  - **Linux systemd (3 tools)**: System service management for Linux
+  - **Windows (2 tools)**: Windows service and Event Log support
+- **19 Git Tools** (+4 new):
+  - `git_conflicts` - Detect merge conflicts in current worktree
+  - `git_submodule_status` - List submodule status
+  - `git_lfs_status` - Get Git LFS status
+  - `git_hooks_list` - List git hooks in repository
+- **21 GitHub Tools** (+3 new):
+  - `github_list_pr_reviews` - List reviews for a pull request
+  - `github_create_review` - Create a review for a pull request
+  - `github_submit_review` - Submit a pending review
+- **15 Network Tools** (+3 new):
+  - `network_route_table` - Show routing table
+  - `network_ssl_check` - Check SSL certificate for a host
+  - `network_traceroute` - Traceroute to a host
+- **14 Process Tools** (+2 new):
+  - `process_threads` - List threads for a process
+  - `process_io_stats` - Get I/O statistics for a process (Linux)
+- **3 Linux systemd Tools** (new category):
+  - `linux_systemd_units` - List systemd units
+  - `linux_systemd_status` - Get status of a systemd unit
+  - `linux_journal_search` - Search systemd journal
+- **2 Windows Tools** (new category):
+  - `windows_service_status` - Get Windows service status
+  - `windows_eventlog_search` - Search Windows Event Log
+
+### Changed
+- Categories increased from 9 to 11
+- Enhanced cross-platform support with native OS integration
+- Updated all documentation with new tool counts
+
 ## [3.1.0] - 2025-12-15
 
 ### Added
