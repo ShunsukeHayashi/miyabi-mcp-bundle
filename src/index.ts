@@ -186,7 +186,7 @@ const octokit = GITHUB_TOKEN ? new Octokit({ auth: GITHUB_TOKEN }) : null;
 
 // ========== Tool Definitions ==========
 const tools: Tool[] = [
-  // === Git Inspector (15 tools) ===
+  // === Git Inspector (19 tools) ===
   { name: 'git_status', description: 'Get current git status (modified, staged, untracked files)', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_branch_list', description: 'List all branches with remote tracking info', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_current_branch', description: 'Get current branch name', inputSchema: { type: 'object', properties: {} } },
@@ -195,10 +195,10 @@ const tools: Tool[] = [
   { name: 'git_diff', description: 'Get diff of unstaged changes', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'Specific file to diff' } } } },
   { name: 'git_staged_diff', description: 'Get diff of staged changes', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_remote_list', description: 'List all remotes', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_branch_ahead_behind', description: 'Check commits ahead/behind origin', inputSchema: { type: 'object', properties: { branch: { type: 'string' } } } },
-  { name: 'git_file_history', description: 'Get commit history for a file', inputSchema: { type: 'object', properties: { file: { type: 'string' }, limit: { type: 'number' } }, required: ['file'] } },
+  { name: 'git_branch_ahead_behind', description: 'Check commits ahead/behind origin', inputSchema: { type: 'object', properties: { branch: { type: 'string', description: 'Branch name (default: current branch)' } } } },
+  { name: 'git_file_history', description: 'Get commit history for a file', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'File path to get history for' }, limit: { type: 'number', description: 'Number of commits (default: 10)' } }, required: ['file'] } },
   { name: 'git_stash_list', description: 'List all stashes', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_blame', description: 'Get blame info for a file', inputSchema: { type: 'object', properties: { file: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' } }, required: ['file'] } },
+  { name: 'git_blame', description: 'Get blame info for a file', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'File path to get blame for' }, startLine: { type: 'number', description: 'Starting line number (1-indexed)' }, endLine: { type: 'number', description: 'Ending line number (1-indexed)' } }, required: ['file'] } },
   { name: 'git_show', description: 'Show commit details', inputSchema: { type: 'object', properties: { commit: { type: 'string', description: 'Commit hash (default: HEAD)' } } } },
   { name: 'git_tag_list', description: 'List all tags', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_contributors', description: 'List contributors with commit counts', inputSchema: { type: 'object', properties: { limit: { type: 'number' } } } },
@@ -209,15 +209,15 @@ const tools: Tool[] = [
 
   // === Tmux Monitor (10 tools) ===
   { name: 'tmux_list_sessions', description: 'List all tmux sessions', inputSchema: { type: 'object', properties: {} } },
-  { name: 'tmux_list_windows', description: 'List windows in a session', inputSchema: { type: 'object', properties: { session: { type: 'string' } } } },
-  { name: 'tmux_list_panes', description: 'List panes in a window', inputSchema: { type: 'object', properties: { session: { type: 'string' } } } },
-  { name: 'tmux_send_keys', description: 'Send keys to a pane', inputSchema: { type: 'object', properties: { target: { type: 'string' }, keys: { type: 'string' } }, required: ['target', 'keys'] } },
-  { name: 'tmux_pane_capture', description: 'Capture pane content', inputSchema: { type: 'object', properties: { target: { type: 'string' }, lines: { type: 'number' } } } },
-  { name: 'tmux_pane_search', description: 'Search pane content', inputSchema: { type: 'object', properties: { target: { type: 'string' }, pattern: { type: 'string' } }, required: ['pattern'] } },
-  { name: 'tmux_pane_tail', description: 'Get last N lines from pane', inputSchema: { type: 'object', properties: { target: { type: 'string' }, lines: { type: 'number' } } } },
-  { name: 'tmux_pane_is_busy', description: 'Check if pane is busy', inputSchema: { type: 'object', properties: { target: { type: 'string' } } } },
-  { name: 'tmux_pane_current_command', description: 'Get current command in pane', inputSchema: { type: 'object', properties: { target: { type: 'string' } } } },
-  { name: 'tmux_session_info', description: 'Get detailed session info', inputSchema: { type: 'object', properties: { session: { type: 'string' } }, required: ['session'] } },
+  { name: 'tmux_list_windows', description: 'List windows in a session', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name (optional, lists all if omitted)' } } } },
+  { name: 'tmux_list_panes', description: 'List panes in a window', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name (optional)' } } } },
+  { name: 'tmux_send_keys', description: 'Send keys to a pane', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (e.g., session:window.pane or %id)' }, keys: { type: 'string', description: 'Keys/text to send' } }, required: ['target', 'keys'] } },
+  { name: 'tmux_pane_capture', description: 'Capture pane content', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (e.g., session:window.pane or %id)' }, lines: { type: 'number', description: 'Number of lines to capture (default: all)' } } } },
+  { name: 'tmux_pane_search', description: 'Search pane content', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (optional)' }, pattern: { type: 'string', description: 'Search pattern (substring match)' } }, required: ['pattern'] } },
+  { name: 'tmux_pane_tail', description: 'Get last N lines from pane', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' }, lines: { type: 'number', description: 'Number of lines to retrieve' } } } },
+  { name: 'tmux_pane_is_busy', description: 'Check if pane is busy', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' } } } },
+  { name: 'tmux_pane_current_command', description: 'Get current command in pane', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' } } } },
+  { name: 'tmux_session_info', description: 'Get detailed session info', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name' } }, required: ['session'] } },
 
   // === Log Aggregator (7 tools) ===
   { name: 'log_sources', description: 'List all log sources', inputSchema: { type: 'object', properties: {} } },
@@ -240,7 +240,7 @@ const tools: Tool[] = [
   { name: 'resource_battery', description: 'Get battery status (laptops)', inputSchema: { type: 'object', properties: {} } },
   { name: 'resource_temperature', description: 'Get CPU/system temperature', inputSchema: { type: 'object', properties: {} } },
 
-  // === Network Inspector (12 tools) ===
+  // === Network Inspector (15 tools) ===
   { name: 'network_interfaces', description: 'List network interfaces', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_connections', description: 'List active connections', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_listening_ports', description: 'List listening ports', inputSchema: { type: 'object', properties: { protocol: { type: 'string', enum: ['tcp', 'udp', 'all'] } } } },
@@ -257,7 +257,7 @@ const tools: Tool[] = [
   { name: 'network_ssl_check', description: 'Check SSL certificate for a host', inputSchema: { type: 'object', properties: { host: { type: 'string' }, port: { type: 'number' } }, required: ['host'] } },
   { name: 'network_traceroute', description: 'Traceroute to a host', inputSchema: { type: 'object', properties: { host: { type: 'string' }, maxHops: { type: 'number' } }, required: ['host'] } },
 
-  // === Process Inspector (12 tools) ===
+  // === Process Inspector (14 tools) ===
   { name: 'process_info', description: 'Get process details by PID', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_list', description: 'List all processes', inputSchema: { type: 'object', properties: { sort: { type: 'string' }, limit: { type: 'number' } } } },
   { name: 'process_search', description: 'Search processes by name', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
@@ -295,15 +295,15 @@ const tools: Tool[] = [
   { name: 'claude_background_shells', description: 'Get background shell info', inputSchema: { type: 'object', properties: {} } },
   { name: 'claude_status', description: 'Get comprehensive Claude status', inputSchema: { type: 'object', properties: {} } },
 
-  // === GitHub Integration (18 tools) ===
-  { name: 'github_list_issues', description: 'List GitHub issues', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'] }, labels: { type: 'string' }, per_page: { type: 'number' } } } },
-  { name: 'github_get_issue', description: 'Get issue details', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' } }, required: ['issue_number'] } },
-  { name: 'github_create_issue', description: 'Create new issue', inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
-  { name: 'github_update_issue', description: 'Update issue', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' }, title: { type: 'string' }, body: { type: 'string' }, state: { type: 'string' } }, required: ['issue_number'] } },
-  { name: 'github_add_comment', description: 'Add comment to issue/PR', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' }, body: { type: 'string' } }, required: ['issue_number', 'body'] } },
-  { name: 'github_list_prs', description: 'List pull requests', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'] }, per_page: { type: 'number' } } } },
-  { name: 'github_get_pr', description: 'Get PR details', inputSchema: { type: 'object', properties: { pull_number: { type: 'number' } }, required: ['pull_number'] } },
-  { name: 'github_create_pr', description: 'Create pull request', inputSchema: { type: 'object', properties: { title: { type: 'string' }, head: { type: 'string' }, base: { type: 'string' }, body: { type: 'string' } }, required: ['title', 'head'] } },
+  // === GitHub Integration (21 tools) ===
+  { name: 'github_list_issues', description: 'List GitHub issues', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'], description: 'Issue state filter (default: open)' }, labels: { type: 'string', description: 'Comma-separated label names to filter' }, per_page: { type: 'number', description: 'Results per page (max 100)' } } } },
+  { name: 'github_get_issue', description: 'Get issue details', inputSchema: { type: 'object', properties: { issue_number: { type: 'number', description: 'Issue number' } }, required: ['issue_number'] } },
+  { name: 'github_create_issue', description: 'Create new GitHub issue with title, body, and labels', inputSchema: { type: 'object', properties: { title: { type: 'string', description: 'Issue title' }, body: { type: 'string', description: 'Issue body (markdown supported)' }, labels: { type: 'array', items: { type: 'string' }, description: 'Array of label names' } }, required: ['title'] } },
+  { name: 'github_update_issue', description: 'Update issue', inputSchema: { type: 'object', properties: { issue_number: { type: 'number', description: 'Issue number to update' }, title: { type: 'string', description: 'New title' }, body: { type: 'string', description: 'New body' }, state: { type: 'string', description: 'New state (open/closed)' } }, required: ['issue_number'] } },
+  { name: 'github_add_comment', description: 'Add comment to issue/PR', inputSchema: { type: 'object', properties: { issue_number: { type: 'number', description: 'Issue or PR number' }, body: { type: 'string', description: 'Comment body (markdown supported)' } }, required: ['issue_number', 'body'] } },
+  { name: 'github_list_prs', description: 'List pull requests', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'], description: 'PR state filter' }, per_page: { type: 'number', description: 'Results per page' } } } },
+  { name: 'github_get_pr', description: 'Get PR details', inputSchema: { type: 'object', properties: { pull_number: { type: 'number', description: 'Pull request number' } }, required: ['pull_number'] } },
+  { name: 'github_create_pr', description: 'Create pull request', inputSchema: { type: 'object', properties: { title: { type: 'string', description: 'PR title' }, head: { type: 'string', description: 'Source branch' }, base: { type: 'string', description: 'Target branch (default: main)' }, body: { type: 'string', description: 'PR description' } }, required: ['title', 'head'] } },
   { name: 'github_merge_pr', description: 'Merge pull request', inputSchema: { type: 'object', properties: { pull_number: { type: 'number' }, merge_method: { type: 'string', enum: ['merge', 'squash', 'rebase'] } }, required: ['pull_number'] } },
   { name: 'github_list_labels', description: 'List repository labels', inputSchema: { type: 'object', properties: {} } },
   { name: 'github_add_labels', description: 'Add labels to issue/PR', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['issue_number', 'labels'] } },
@@ -332,9 +332,9 @@ const tools: Tool[] = [
 
   // === Docker (10 tools) ===
   { name: 'docker_ps', description: 'List Docker containers', inputSchema: { type: 'object', properties: { all: { type: 'boolean', description: 'Show all containers (default shows running)' }, limit: { type: 'number', description: 'Limit output' } } } },
-  { name: 'docker_images', description: 'List Docker images', inputSchema: { type: 'object', properties: { all: { type: 'boolean' }, dangling: { type: 'boolean' } } } },
-  { name: 'docker_logs', description: 'Get container logs', inputSchema: { type: 'object', properties: { container: { type: 'string' }, tail: { type: 'number' }, since: { type: 'string' }, timestamps: { type: 'boolean' } }, required: ['container'] } },
-  { name: 'docker_inspect', description: 'Get container or image details', inputSchema: { type: 'object', properties: { target: { type: 'string' }, type: { type: 'string', enum: ['container', 'image'] } }, required: ['target'] } },
+  { name: 'docker_images', description: 'List Docker images', inputSchema: { type: 'object', properties: { all: { type: 'boolean', description: 'Show all images (default: only tagged)' }, dangling: { type: 'boolean', description: 'Show only dangling images' } } } },
+  { name: 'docker_logs', description: 'Get container logs', inputSchema: { type: 'object', properties: { container: { type: 'string', description: 'Container name or ID' }, tail: { type: 'number', description: 'Number of lines from end (e.g., 100)' }, since: { type: 'string', description: 'Show logs since (e.g., 10m, 1h, 2024-01-01)' }, timestamps: { type: 'boolean', description: 'Show timestamps' } }, required: ['container'] } },
+  { name: 'docker_inspect', description: 'Get container or image details', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Container/image name or ID' }, type: { type: 'string', enum: ['container', 'image'], description: 'Target type' } }, required: ['target'] } },
   { name: 'docker_stats', description: 'Get container resource usage', inputSchema: { type: 'object', properties: { container: { type: 'string', description: 'Container name/id (optional, all if omitted)' }, noStream: { type: 'boolean' } } } },
   { name: 'docker_exec', description: 'Execute command in container (read-only recommended)', inputSchema: { type: 'object', properties: { container: { type: 'string' }, command: { type: 'string' }, user: { type: 'string' } }, required: ['container', 'command'] } },
   { name: 'docker_start', description: 'Start a stopped container', inputSchema: { type: 'object', properties: { container: { type: 'string' } }, required: ['container'] } },
@@ -2479,7 +2479,12 @@ async function handleMcpTool(name: string, args: Record<string, unknown>): Promi
       k8s: 'Kubernetes cluster management',
       speckit: 'Spec-Driven Development workflow',
       mcp: 'MCP tool discovery and search',
-      health: 'System health check'
+      health: 'System health check',
+      db: 'Database operations (SQLite, PostgreSQL, MySQL)',
+      time: 'Time and timezone utilities',
+      calc: 'Mathematical calculations and conversions',
+      think: 'Sequential reasoning and thought chains',
+      gen: 'Data generators (UUID, password, hash)'
     };
 
     for (const tool of tools) {
