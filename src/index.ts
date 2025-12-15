@@ -2,18 +2,21 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 100+ tools across 9 categories:
- * - Git Inspector (15 tools)
+ * A comprehensive MCP server with 120 tools across 11 categories:
+ * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
  * - Resource Monitor (10 tools)
- * - Network Inspector (12 tools)
- * - Process Inspector (12 tools)
+ * - Network Inspector (15 tools)
+ * - Process Inspector (14 tools)
  * - File Watcher (10 tools)
  * - Claude Code Monitor (8 tools)
- * - GitHub Integration (18 tools)
+ * - GitHub Integration (21 tools)
+ * - Linux systemd (3 tools)
+ * - Windows (2 tools)
+ * + System Health (1 tool)
  *
- * @version 3.1.0
+ * @version 3.2.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -189,6 +192,10 @@ const tools: Tool[] = [
   { name: 'git_show', description: 'Show commit details', inputSchema: { type: 'object', properties: { commit: { type: 'string', description: 'Commit hash (default: HEAD)' } } } },
   { name: 'git_tag_list', description: 'List all tags', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_contributors', description: 'List contributors with commit counts', inputSchema: { type: 'object', properties: { limit: { type: 'number' } } } },
+  { name: 'git_conflicts', description: 'Detect merge conflicts in current worktree', inputSchema: { type: 'object', properties: {} } },
+  { name: 'git_submodule_status', description: 'List submodule status', inputSchema: { type: 'object', properties: {} } },
+  { name: 'git_lfs_status', description: 'Get Git LFS status (requires git-lfs)', inputSchema: { type: 'object', properties: {} } },
+  { name: 'git_hooks_list', description: 'List git hooks in repository', inputSchema: { type: 'object', properties: {} } },
 
   // === Tmux Monitor (10 tools) ===
   { name: 'tmux_list_sessions', description: 'List all tmux sessions', inputSchema: { type: 'object', properties: {} } },
@@ -236,6 +243,9 @@ const tools: Tool[] = [
   { name: 'network_port_check', description: 'Check if a port is open on a host', inputSchema: { type: 'object', properties: { host: { type: 'string' }, port: { type: 'number' } }, required: ['host', 'port'] } },
   { name: 'network_public_ip', description: 'Get public IP address', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_wifi_info', description: 'Get WiFi connection info (macOS/Linux)', inputSchema: { type: 'object', properties: {} } },
+  { name: 'network_route_table', description: 'Show routing table', inputSchema: { type: 'object', properties: {} } },
+  { name: 'network_ssl_check', description: 'Check SSL certificate for a host', inputSchema: { type: 'object', properties: { host: { type: 'string' }, port: { type: 'number' } }, required: ['host'] } },
+  { name: 'network_traceroute', description: 'Traceroute to a host', inputSchema: { type: 'object', properties: { host: { type: 'string' }, maxHops: { type: 'number' } }, required: ['host'] } },
 
   // === Process Inspector (12 tools) ===
   { name: 'process_info', description: 'Get process details by PID', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
@@ -250,6 +260,8 @@ const tools: Tool[] = [
   { name: 'process_ports', description: 'Get ports used by a process', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_cpu_history', description: 'Get CPU usage history for process', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_memory_detail', description: 'Get detailed memory info for process', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
+  { name: 'process_threads', description: 'List threads for a process', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
+  { name: 'process_io_stats', description: 'Get I/O statistics for a process (Linux)', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
 
   // === File Watcher (10 tools) ===
   { name: 'file_stats', description: 'Get file/directory stats', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
@@ -292,9 +304,21 @@ const tools: Tool[] = [
   { name: 'github_list_releases', description: 'List releases', inputSchema: { type: 'object', properties: { per_page: { type: 'number' } } } },
   { name: 'github_list_branches', description: 'List branches with protection status', inputSchema: { type: 'object', properties: { per_page: { type: 'number' } } } },
   { name: 'github_compare_commits', description: 'Compare two commits/branches', inputSchema: { type: 'object', properties: { base: { type: 'string' }, head: { type: 'string' } }, required: ['base', 'head'] } },
+  { name: 'github_list_pr_reviews', description: 'List reviews for a pull request', inputSchema: { type: 'object', properties: { pull_number: { type: 'number' } }, required: ['pull_number'] } },
+  { name: 'github_create_review', description: 'Create a review for a pull request', inputSchema: { type: 'object', properties: { pull_number: { type: 'number' }, body: { type: 'string' }, event: { type: 'string', enum: ['APPROVE', 'REQUEST_CHANGES', 'COMMENT'] }, comments: { type: 'array', items: { type: 'object' } } }, required: ['pull_number'] } },
+  { name: 'github_submit_review', description: 'Submit a pending review', inputSchema: { type: 'object', properties: { pull_number: { type: 'number' }, review_id: { type: 'number' }, body: { type: 'string' }, event: { type: 'string', enum: ['APPROVE', 'REQUEST_CHANGES', 'COMMENT'] } }, required: ['pull_number', 'review_id', 'event'] } },
 
   // === System Health (1 tool) ===
   { name: 'health_check', description: 'Comprehensive system health check', inputSchema: { type: 'object', properties: {} } },
+
+  // === Linux systemd (3 tools) ===
+  { name: 'linux_systemd_units', description: 'List systemd units (Linux only)', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'] }, state: { type: 'string', enum: ['running', 'failed', 'inactive'] } } } },
+  { name: 'linux_systemd_status', description: 'Get status of a systemd unit (Linux only)', inputSchema: { type: 'object', properties: { unit: { type: 'string' } }, required: ['unit'] } },
+  { name: 'linux_journal_search', description: 'Search systemd journal (Linux only)', inputSchema: { type: 'object', properties: { unit: { type: 'string' }, priority: { type: 'string', enum: ['emerg', 'alert', 'crit', 'err', 'warning', 'notice', 'info', 'debug'] }, since: { type: 'string' }, lines: { type: 'number' } } } },
+
+  // === Windows (2 tools) ===
+  { name: 'windows_service_status', description: 'Get Windows service status (Windows only)', inputSchema: { type: 'object', properties: { service: { type: 'string' } } } },
+  { name: 'windows_eventlog_search', description: 'Search Windows Event Log (Windows only)', inputSchema: { type: 'object', properties: { log: { type: 'string', enum: ['Application', 'System', 'Security'] }, level: { type: 'string', enum: ['Error', 'Warning', 'Information'] }, source: { type: 'string' }, maxEvents: { type: 'number' } } } },
 ];
 
 // ========== Tool Handlers ==========
@@ -374,6 +398,69 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
       const { stdout } = await execAsync(`git shortlog -sn --no-merges HEAD | head -${limit}`, { cwd: MIYABI_REPO_PATH });
       return { contributors: stdout.trim().split('\n').filter(Boolean) };
     }
+    if (name === 'git_conflicts') {
+      try {
+        const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: MIYABI_REPO_PATH });
+        const conflicts = stdout.trim().split('\n').filter(Boolean);
+        return { hasConflicts: conflicts.length > 0, files: conflicts };
+      } catch {
+        return { hasConflicts: false, files: [] };
+      }
+    }
+    if (name === 'git_submodule_status') {
+      try {
+        const { stdout } = await execAsync('git submodule status --recursive', { cwd: MIYABI_REPO_PATH });
+        const lines = stdout.trim().split('\n').filter(Boolean);
+        const submodules = lines.map(line => {
+          const match = line.match(/^([+-U ]?)([a-f0-9]+)\s+(\S+)(?:\s+\((.+)\))?/);
+          if (match) {
+            return {
+              status: match[1] === '+' ? 'modified' : match[1] === '-' ? 'uninitialized' : match[1] === 'U' ? 'conflict' : 'ok',
+              commit: match[2],
+              path: match[3],
+              describe: match[4] || null
+            };
+          }
+          return { raw: line };
+        });
+        return { submodules };
+      } catch {
+        return { submodules: [], message: 'No submodules or git submodule not available' };
+      }
+    }
+    if (name === 'git_lfs_status') {
+      const hasLfs = await commandExists('git-lfs');
+      if (!hasLfs) {
+        return { error: 'git-lfs is not installed', installed: false };
+      }
+      try {
+        const { stdout: statusOut } = await execAsync('git lfs status', { cwd: MIYABI_REPO_PATH });
+        const { stdout: envOut } = await execAsync('git lfs env', { cwd: MIYABI_REPO_PATH });
+        return { installed: true, status: statusOut.trim(), env: envOut.trim() };
+      } catch (error) {
+        return { installed: true, error: error instanceof Error ? error.message : String(error) };
+      }
+    }
+    if (name === 'git_hooks_list') {
+      const hooksDir = join(MIYABI_REPO_PATH, '.git', 'hooks');
+      try {
+        const files = await readdir(hooksDir);
+        const hooks = files
+          .filter(f => !f.endsWith('.sample'))
+          .map(async (f) => {
+            const hookPath = join(hooksDir, f);
+            const hookStat = await stat(hookPath);
+            return {
+              name: f,
+              executable: (hookStat.mode & 0o111) !== 0,
+              size: hookStat.size
+            };
+          });
+        return { hooks: await Promise.all(hooks) };
+      } catch {
+        return { hooks: [], message: 'No hooks directory or not a git repository' };
+      }
+    }
 
     // Category handlers
     if (name.startsWith('tmux_')) return await handleTmuxTool(name, args);
@@ -385,6 +472,8 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('claude_')) return await handleClaudeTool(name, args);
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
+    if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
+    if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -697,6 +786,49 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
     }
     return { error: 'WiFi info only available on macOS' };
   }
+  if (name === 'network_route_table') {
+    const cmd = platform() === 'win32' ? 'route print' : 'netstat -rn';
+    try {
+      const { stdout } = await execAsync(cmd);
+      return { routes: stdout };
+    } catch {
+      return { error: 'Could not get routing table' };
+    }
+  }
+  if (name === 'network_ssl_check') {
+    const host = sanitizeShellArg(args.host as string);
+    if (!isValidHostname(host)) return { error: 'Invalid hostname' };
+    const port = Math.min(Math.max((args.port as number) || 443, 1), 65535);
+    try {
+      const { stdout } = await execAsync(
+        `echo | openssl s_client -connect "${host}:${port}" -servername "${host}" 2>/dev/null | openssl x509 -noout -dates -subject -issuer`,
+        { timeout: 10000 }
+      );
+      const lines = stdout.trim().split('\n');
+      const result: Record<string, string> = {};
+      for (const line of lines) {
+        const [key, ...value] = line.split('=');
+        if (key && value.length) result[key.trim()] = value.join('=').trim();
+      }
+      return { host, port, certificate: result };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'SSL check failed' };
+    }
+  }
+  if (name === 'network_traceroute') {
+    const host = sanitizeShellArg(args.host as string);
+    if (!isValidHostname(host)) return { error: 'Invalid hostname' };
+    const maxHops = Math.min(Math.max((args.maxHops as number) || 15, 1), 30);
+    const cmd = platform() === 'win32'
+      ? `tracert -h ${maxHops} "${host}"`
+      : `traceroute -m ${maxHops} "${host}" 2>&1`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 60000 });
+      return { host, maxHops, trace: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Traceroute failed' };
+    }
+  }
   return { error: `Unknown network tool: ${name}` };
 }
 
@@ -791,6 +923,41 @@ async function handleProcessTool(name: string, args: Record<string, unknown>): P
     if (!isValidPid(pid)) return { error: 'Invalid PID' };
     const { stdout } = await execAsync(`ps -p ${pid} -o pid,rss,vsz,%mem 2>/dev/null`);
     return { memory: stdout };
+  }
+  if (name === 'process_threads') {
+    const pid = args.pid;
+    if (!isValidPid(pid)) return { error: 'Invalid PID' };
+    try {
+      if (platform() === 'darwin') {
+        const { stdout } = await execAsync(`ps -M -p ${pid} 2>/dev/null`);
+        return { pid, threads: stdout };
+      } else if (platform() === 'linux') {
+        const { stdout } = await execAsync(`ps -T -p ${pid} 2>/dev/null`);
+        return { pid, threads: stdout };
+      }
+      return { error: 'Thread listing not supported on this platform' };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Could not list threads' };
+    }
+  }
+  if (name === 'process_io_stats') {
+    const pid = args.pid;
+    if (!isValidPid(pid)) return { error: 'Invalid PID' };
+    if (platform() !== 'linux') {
+      return { error: 'I/O stats only available on Linux' };
+    }
+    try {
+      const { stdout } = await execAsync(`cat /proc/${pid}/io 2>/dev/null`);
+      const lines = stdout.trim().split('\n');
+      const stats: Record<string, number> = {};
+      for (const line of lines) {
+        const [key, value] = line.split(':');
+        if (key && value) stats[key.trim()] = parseInt(value.trim(), 10);
+      }
+      return { pid, io: stats };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Could not read I/O stats' };
+    }
   }
   return { error: `Unknown process tool: ${name}` };
 }
@@ -1137,6 +1304,55 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
       commits: response.data.commits.map(c => ({ sha: c.sha, message: c.commit.message }))
     };
   }
+  if (name === 'github_list_pr_reviews') {
+    const pullNumber = args.pull_number as number;
+    const response = await octokit.pulls.listReviews({ owner, repo, pull_number: pullNumber });
+    return {
+      reviews: response.data.map(r => ({
+        id: r.id,
+        user: r.user?.login,
+        state: r.state,
+        body: r.body,
+        submitted_at: r.submitted_at
+      }))
+    };
+  }
+  if (name === 'github_create_review') {
+    const pullNumber = args.pull_number as number;
+    const body = args.body as string | undefined;
+    const event = args.event as 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT' | undefined;
+    const comments = args.comments as Array<{ path: string; position?: number; body: string }> | undefined;
+    const response = await octokit.pulls.createReview({
+      owner, repo,
+      pull_number: pullNumber,
+      body,
+      event,
+      comments
+    });
+    return {
+      id: response.data.id,
+      state: response.data.state,
+      html_url: response.data.html_url
+    };
+  }
+  if (name === 'github_submit_review') {
+    const pullNumber = args.pull_number as number;
+    const reviewId = args.review_id as number;
+    const body = args.body as string | undefined;
+    const event = args.event as 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
+    const response = await octokit.pulls.submitReview({
+      owner, repo,
+      pull_number: pullNumber,
+      review_id: reviewId,
+      body,
+      event
+    });
+    return {
+      id: response.data.id,
+      state: response.data.state,
+      html_url: response.data.html_url
+    };
+  }
   return { error: `Unknown github tool: ${name}` };
 }
 
@@ -1169,11 +1385,108 @@ async function handleHealthCheck(): Promise<unknown> {
   return health;
 }
 
+async function handleLinuxTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  if (platform() !== 'linux') {
+    return { error: 'Linux tools are only available on Linux' };
+  }
+
+  const hasSystemctl = await commandExists('systemctl');
+  if (!hasSystemctl) {
+    return { error: 'systemctl not found. This system may not use systemd.' };
+  }
+
+  if (name === 'linux_systemd_units') {
+    const unitType = sanitizeShellArg((args.type as string) || '');
+    const state = sanitizeShellArg((args.state as string) || '');
+    let cmd = 'systemctl list-units --no-pager';
+    if (unitType) cmd += ` --type=${unitType}`;
+    if (state) cmd += ` --state=${state}`;
+    try {
+      const { stdout } = await execAsync(cmd);
+      return { units: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to list units' };
+    }
+  }
+  if (name === 'linux_systemd_status') {
+    const unit = sanitizeShellArg(args.unit as string);
+    if (!unit) return { error: 'Unit name required' };
+    try {
+      const { stdout } = await execAsync(`systemctl status "${unit}" --no-pager 2>&1 || true`);
+      return { unit, status: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get status' };
+    }
+  }
+  if (name === 'linux_journal_search') {
+    const hasJournalctl = await commandExists('journalctl');
+    if (!hasJournalctl) {
+      return { error: 'journalctl not found' };
+    }
+    const unit = sanitizeShellArg((args.unit as string) || '');
+    const priority = sanitizeShellArg((args.priority as string) || '');
+    const since = sanitizeShellArg((args.since as string) || '');
+    const lines = Math.min(Math.max((args.lines as number) || 100, 1), 1000);
+    let cmd = `journalctl --no-pager -n ${lines}`;
+    if (unit) cmd += ` -u "${unit}"`;
+    if (priority) cmd += ` -p ${priority}`;
+    if (since) cmd += ` --since="${since}"`;
+    try {
+      const { stdout } = await execAsync(cmd);
+      return { journal: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to search journal' };
+    }
+  }
+  return { error: `Unknown linux tool: ${name}` };
+}
+
+async function handleWindowsTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  if (platform() !== 'win32') {
+    return { error: 'Windows tools are only available on Windows' };
+  }
+
+  if (name === 'windows_service_status') {
+    const service = sanitizeShellArg((args.service as string) || '');
+    const cmd = service
+      ? `sc query "${service}"`
+      : 'sc query state= all';
+    try {
+      const { stdout } = await execAsync(cmd);
+      return { services: stdout };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get service status' };
+    }
+  }
+  if (name === 'windows_eventlog_search') {
+    const log = sanitizeShellArg((args.log as string) || 'System');
+    const level = sanitizeShellArg((args.level as string) || '');
+    const source = sanitizeShellArg((args.source as string) || '');
+    const maxEvents = Math.min(Math.max((args.maxEvents as number) || 50, 1), 500);
+
+    let filter = `LogName='${log}'`;
+    if (level) {
+      const levelMap: Record<string, number> = { Error: 2, Warning: 3, Information: 4 };
+      if (levelMap[level]) filter += ` and Level=${levelMap[level]}`;
+    }
+    if (source) filter += ` and ProviderName='${source}'`;
+
+    const cmd = `powershell -Command "Get-WinEvent -FilterHashtable @{${filter}} -MaxEvents ${maxEvents} | Select-Object TimeCreated,LevelDisplayName,ProviderName,Message | ConvertTo-Json"`;
+    try {
+      const { stdout } = await execAsync(cmd, { timeout: 30000 });
+      return { events: stdout ? JSON.parse(stdout) : [] };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to search event log' };
+    }
+  }
+  return { error: `Unknown windows tool: ${name}` };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.1.0',
+    version: '3.2.0',
   },
   {
     capabilities: {
