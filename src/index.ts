@@ -511,7 +511,20 @@ async function handleResourceTool(name: string, args: Record<string, unknown>): 
     return { cpu: cpu.currentLoad, cores: cpu.cpus };
   }
   if (name === 'resource_memory') {
+    const cached = cache.get<si.Systeminformation.MemData>('memory');
+    if (cached) {
+      return {
+        total: cached.total,
+        used: cached.used,
+        free: cached.free,
+        available: cached.available,
+        usedPercent: (cached.used / cached.total) * 100,
+        swapTotal: cached.swaptotal,
+        swapUsed: cached.swapused
+      };
+    }
     const mem = await si.mem();
+    cache.set('memory', mem, 2000);
     return {
       total: mem.total,
       used: mem.used,
@@ -523,11 +536,17 @@ async function handleResourceTool(name: string, args: Record<string, unknown>): 
     };
   }
   if (name === 'resource_disk') {
+    const cached = cache.get<si.Systeminformation.FsSizeData[]>('disk');
+    if (cached) return { disks: cached };
     const disks = await si.fsSize();
+    cache.set('disk', disks, 10000);
     return { disks };
   }
   if (name === 'resource_load') {
+    const cached = cache.get<si.Systeminformation.CurrentLoadData>('load');
+    if (cached) return { avgLoad: cached.avgLoad, currentLoad: cached.currentLoad };
     const load = await si.currentLoad();
+    cache.set('load', load, 2000);
     return { avgLoad: load.avgLoad, currentLoad: load.currentLoad };
   }
   if (name === 'resource_overview') {
@@ -570,7 +589,10 @@ async function handleResourceTool(name: string, args: Record<string, unknown>): 
 
 async function handleNetworkTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   if (name === 'network_interfaces') {
+    const cached = cache.get<si.Systeminformation.NetworkInterfacesData[]>('network_interfaces');
+    if (cached) return { interfaces: cached };
     const interfaces = await si.networkInterfaces();
+    cache.set('network_interfaces', interfaces, 30000); // 30 seconds - interfaces rarely change
     return { interfaces };
   }
   if (name === 'network_connections') {
@@ -587,7 +609,10 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
     return { ports: listening };
   }
   if (name === 'network_stats') {
+    const cached = cache.get<si.Systeminformation.NetworkStatsData[]>('network_stats');
+    if (cached) return { stats: cached };
     const stats = await si.networkStats();
+    cache.set('network_stats', stats, 2000); // 2 seconds
     return { stats };
   }
   if (name === 'network_gateway') {
