@@ -15,7 +15,7 @@
 
 <br />
 
-**76 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+**82 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 [Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [Plugins](#-plugins) · [日本語](#-日本語)
 
@@ -51,7 +51,7 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <td width="50%">
 
 ### 🎯 **Complete AI Development Platform**
-76 MCP Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks in one package.
+82 MCP Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks in one package.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -152,7 +152,7 @@ After configuration, try these commands in Claude Desktop:
 
 <div align="center">
 
-### 76 Tools Across 9 Categories
+### 82 Tools Across 9 Categories
 
 </div>
 
@@ -498,7 +498,7 @@ Claude Desktopを**強力な開発コマンドセンター**に変換する、�
 
 ### 🎯 特徴
 
-- **76 MCPツール** を9カテゴリに統合
+- **82 MCPツール** を9カテゴリに統合
 - **38 AIエージェント** - コード生成、レビュー、デプロイ等
 - **22 開発スキル** - Rust、Git、TDD、セキュリティ等
 - **56 スラッシュコマンド** - デプロイ、PR作成、Issue管理等

@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
- * 
- * A comprehensive MCP server with 76 tools across 9 categories:
- * - Git Inspector (10 tools)
+ *
+ * A comprehensive MCP server with 82 tools across 9 categories:
+ * - Git Inspector (12 tools)
  * - Tmux Monitor (9 tools)
  * - Log Aggregator (6 tools)
  * - Resource Monitor (8 tools)
- * - Network Inspector (8 tools)
- * - Process Inspector (8 tools)
- * - File Watcher (6 tools)
+ * - Network Inspector (9 tools)
+ * - Process Inspector (9 tools)
+ * - File Watcher (7 tools)
  * - Claude Code Monitor (8 tools)
- * - GitHub Integration (12 tools)
+ * - GitHub Integration (14 tools)
  * 
  * @author Shunsuke Hayashi
  * @license MIT
@@ -29,12 +29,46 @@ import { Octokit } from '@octokit/rest';
 import * as si from 'systeminformation';
 import { glob } from 'glob';
 import { readFile, readdir, stat } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { homedir, platform } from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+
+// ========== Security Helpers ==========
+/**
+ * Sanitize shell argument to prevent command injection
+ */
+function sanitizeShellArg(arg: string): string {
+  if (!arg) return '';
+  // Remove or escape dangerous characters
+  return arg.replace(/[;&|`$(){}[\]<>\\!#*?~]/g, '');
+}
+
+/**
+ * Validate and sanitize path to prevent traversal attacks
+ */
+function sanitizePath(basePath: string, userPath: string): string {
+  const resolved = resolve(basePath, userPath);
+  // Ensure resolved path is within base directory
+  if (!resolved.startsWith(resolve(basePath))) {
+    throw new Error('Path traversal detected');
+  }
+  return resolved;
+}
+
+/**
+ * Check if command exists on the system
+ */
+async function commandExists(cmd: string): Promise<boolean> {
+  try {
+    await execAsync(`which ${cmd}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // ========== Environment Configuration ==========
 const MIYABI_REPO_PATH = process.env.MIYABI_REPO_PATH || process.cwd();
@@ -63,7 +97,7 @@ const octokit = GITHUB_TOKEN ? new Octokit({ auth: GITHUB_TOKEN }) : null;
 
 // ========== Tool Definitions ==========
 const tools: Tool[] = [
-  // === Git Inspector (10 tools) ===
+  // === Git Inspector (12 tools) ===
   { name: 'git_status', description: 'Get current git status (modified, staged, untracked files)', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_branch_list', description: 'List all branches with remote tracking info', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_current_branch', description: 'Get current branch name', inputSchema: { type: 'object', properties: {} } },
@@ -74,6 +108,8 @@ const tools: Tool[] = [
   { name: 'git_remote_list', description: 'List all remotes', inputSchema: { type: 'object', properties: {} } },
   { name: 'git_branch_ahead_behind', description: 'Check commits ahead/behind origin', inputSchema: { type: 'object', properties: { branch: { type: 'string' } } } },
   { name: 'git_file_history', description: 'Get commit history for a file', inputSchema: { type: 'object', properties: { file: { type: 'string' }, limit: { type: 'number' } }, required: ['file'] } },
+  { name: 'git_stash_list', description: 'List all stashes', inputSchema: { type: 'object', properties: {} } },
+  { name: 'git_blame', description: 'Get blame info for a file', inputSchema: { type: 'object', properties: { file: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' } }, required: ['file'] } },
 
   // === Tmux Monitor (9 tools) ===
   { name: 'tmux_list_sessions', description: 'List all tmux sessions', inputSchema: { type: 'object', properties: {} } },
@@ -104,7 +140,7 @@ const tools: Tool[] = [
   { name: 'resource_uptime', description: 'Get system uptime', inputSchema: { type: 'object', properties: {} } },
   { name: 'resource_network_stats', description: 'Get network statistics', inputSchema: { type: 'object', properties: {} } },
 
-  // === Network Inspector (8 tools) ===
+  // === Network Inspector (9 tools) ===
   { name: 'network_interfaces', description: 'List network interfaces', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_connections', description: 'List active connections', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_listening_ports', description: 'List listening ports', inputSchema: { type: 'object', properties: { protocol: { type: 'string', enum: ['tcp', 'udp', 'all'] } } } },
@@ -113,8 +149,9 @@ const tools: Tool[] = [
   { name: 'network_ping', description: 'Ping a host', inputSchema: { type: 'object', properties: { host: { type: 'string' } }, required: ['host'] } },
   { name: 'network_bandwidth', description: 'Get bandwidth usage', inputSchema: { type: 'object', properties: {} } },
   { name: 'network_overview', description: 'Get network overview', inputSchema: { type: 'object', properties: {} } },
+  { name: 'network_dns_lookup', description: 'DNS lookup for a hostname', inputSchema: { type: 'object', properties: { hostname: { type: 'string' } }, required: ['hostname'] } },
 
-  // === Process Inspector (8 tools) ===
+  // === Process Inspector (9 tools) ===
   { name: 'process_info', description: 'Get process details by PID', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_list', description: 'List all processes', inputSchema: { type: 'object', properties: { sort: { type: 'string' }, limit: { type: 'number' } } } },
   { name: 'process_search', description: 'Search processes by name', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
@@ -123,14 +160,16 @@ const tools: Tool[] = [
   { name: 'process_environment', description: 'Get environment variables for process', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_children', description: 'Get child processes', inputSchema: { type: 'object', properties: { pid: { type: 'number' } }, required: ['pid'] } },
   { name: 'process_top', description: 'Get top processes by CPU/memory', inputSchema: { type: 'object', properties: { limit: { type: 'number' } } } },
+  { name: 'process_kill', description: 'Kill a process by PID (requires confirmation)', inputSchema: { type: 'object', properties: { pid: { type: 'number' }, signal: { type: 'string', enum: ['SIGTERM', 'SIGKILL', 'SIGINT'], description: 'Signal to send (default: SIGTERM)' }, confirm: { type: 'boolean', description: 'Must be true to execute' } }, required: ['pid', 'confirm'] } },
 
-  // === File Watcher (6 tools) ===
+  // === File Watcher (7 tools) ===
   { name: 'file_stats', description: 'Get file/directory stats', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } },
   { name: 'file_recent_changes', description: 'Get recently changed files', inputSchema: { type: 'object', properties: { directory: { type: 'string' }, minutes: { type: 'number' }, limit: { type: 'number' }, pattern: { type: 'string' } } } },
   { name: 'file_search', description: 'Search files by glob pattern', inputSchema: { type: 'object', properties: { pattern: { type: 'string' }, directory: { type: 'string' } }, required: ['pattern'] } },
   { name: 'file_tree', description: 'Get directory tree', inputSchema: { type: 'object', properties: { directory: { type: 'string' }, depth: { type: 'number' } } } },
   { name: 'file_compare', description: 'Compare two files', inputSchema: { type: 'object', properties: { path1: { type: 'string' }, path2: { type: 'string' } }, required: ['path1', 'path2'] } },
   { name: 'file_changes_since', description: 'Get files changed since timestamp', inputSchema: { type: 'object', properties: { since: { type: 'string' }, directory: { type: 'string' }, pattern: { type: 'string' } }, required: ['since'] } },
+  { name: 'file_read', description: 'Read file contents (text files only, max 100KB)', inputSchema: { type: 'object', properties: { path: { type: 'string' }, encoding: { type: 'string', description: 'Encoding (default: utf-8)' }, maxLines: { type: 'number', description: 'Max lines to read (default: 1000)' } }, required: ['path'] } },
 
   // === Claude Code Monitor (8 tools) ===
   { name: 'claude_config', description: 'Get Claude Desktop configuration', inputSchema: { type: 'object', properties: {} } },
@@ -142,7 +181,7 @@ const tools: Tool[] = [
   { name: 'claude_background_shells', description: 'Get background shell info', inputSchema: { type: 'object', properties: {} } },
   { name: 'claude_status', description: 'Get comprehensive Claude status', inputSchema: { type: 'object', properties: {} } },
 
-  // === GitHub Integration (12 tools) ===
+  // === GitHub Integration (14 tools) ===
   { name: 'github_list_issues', description: 'List GitHub issues', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'] }, labels: { type: 'string' }, per_page: { type: 'number' } } } },
   { name: 'github_get_issue', description: 'Get issue details', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' } }, required: ['issue_number'] } },
   { name: 'github_create_issue', description: 'Create new issue', inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
@@ -155,6 +194,8 @@ const tools: Tool[] = [
   { name: 'github_list_labels', description: 'List repository labels', inputSchema: { type: 'object', properties: {} } },
   { name: 'github_add_labels', description: 'Add labels to issue/PR', inputSchema: { type: 'object', properties: { issue_number: { type: 'number' }, labels: { type: 'array', items: { type: 'string' } } }, required: ['issue_number', 'labels'] } },
   { name: 'github_list_milestones', description: 'List milestones', inputSchema: { type: 'object', properties: { state: { type: 'string', enum: ['open', 'closed', 'all'] } } } },
+  { name: 'github_list_workflows', description: 'List GitHub Actions workflows and their status', inputSchema: { type: 'object', properties: { per_page: { type: 'number' } } } },
+  { name: 'github_list_workflow_runs', description: 'List recent workflow runs', inputSchema: { type: 'object', properties: { workflow_id: { type: 'string' }, status: { type: 'string', enum: ['queued', 'in_progress', 'completed'] }, per_page: { type: 'number' } } } },
 ];
 
 // ========== Tool Handlers ==========
@@ -207,6 +248,21 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
       const log = await git.log({ file, maxCount: limit });
       return log;
     }
+    if (name === 'git_stash_list') {
+      const stashList = await git.stashList();
+      return { stashes: stashList.all };
+    }
+    if (name === 'git_blame') {
+      const file = sanitizeShellArg(args.file as string);
+      const startLine = args.startLine as number | undefined;
+      const endLine = args.endLine as number | undefined;
+      let cmd = `git blame --line-porcelain "${file}"`;
+      if (startLine && endLine) {
+        cmd = `git blame --line-porcelain -L ${startLine},${endLine} "${file}"`;
+      }
+      const { stdout } = await execAsync(cmd, { cwd: MIYABI_REPO_PATH });
+      return { blame: stdout };
+    }
 
     // Tmux Monitor
     if (name.startsWith('tmux_')) {
@@ -256,73 +312,77 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
 
 // ========== Category Handlers ==========
 async function handleTmuxTool(name: string, args: Record<string, unknown>): Promise<unknown> {
-  const target = (args.target as string) || '';
-  
+  const target = sanitizeShellArg((args.target as string) || '');
+
   if (name === 'tmux_list_sessions') {
     const { stdout } = await execAsync('tmux list-sessions -F "#{session_name}:#{session_windows}:#{session_attached}"');
     return { sessions: stdout.trim().split('\n') };
   }
   if (name === 'tmux_list_windows') {
-    const session = (args.session as string) || '';
-    const cmd = session ? `tmux list-windows -t ${session}` : 'tmux list-windows';
+    const session = sanitizeShellArg((args.session as string) || '');
+    const cmd = session ? `tmux list-windows -t "${session}"` : 'tmux list-windows';
     const { stdout } = await execAsync(cmd);
     return { windows: stdout.trim().split('\n') };
   }
   if (name === 'tmux_list_panes') {
-    const session = (args.session as string) || '';
-    const cmd = session ? `tmux list-panes -t ${session} -F "#{pane_id}:#{pane_current_command}:#{pane_pid}"` : 'tmux list-panes -a -F "#{session_name}:#{pane_id}:#{pane_current_command}"';
+    const session = sanitizeShellArg((args.session as string) || '');
+    const cmd = session ? `tmux list-panes -t "${session}" -F "#{pane_id}:#{pane_current_command}:#{pane_pid}"` : 'tmux list-panes -a -F "#{session_name}:#{pane_id}:#{pane_current_command}"';
     const { stdout } = await execAsync(cmd);
     return { panes: stdout.trim().split('\n') };
   }
   if (name === 'tmux_send_keys') {
-    await execAsync(`tmux send-keys -t ${target} "${args.keys}" Enter`);
+    const keys = sanitizeShellArg(args.keys as string);
+    await execAsync(`tmux send-keys -t "${target}" "${keys}" Enter`);
     return { success: true };
   }
   if (name === 'tmux_pane_capture') {
-    const lines = (args.lines as number) || 100;
-    const { stdout } = await execAsync(`tmux capture-pane -t ${target} -p -S -${lines}`);
+    const lines = Math.min(Math.max((args.lines as number) || 100, 1), 10000);
+    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p -S -${lines}`);
     return { content: stdout };
   }
   if (name === 'tmux_pane_search') {
-    const { stdout } = await execAsync(`tmux capture-pane -t ${target} -p | grep -i "${args.pattern}"`);
-    return { matches: stdout.trim().split('\n') };
+    const pattern = sanitizeShellArg(args.pattern as string);
+    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p | grep -i "${pattern}" || true`);
+    return { matches: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'tmux_pane_tail') {
-    const lines = (args.lines as number) || 20;
-    const { stdout } = await execAsync(`tmux capture-pane -t ${target} -p | tail -n ${lines}`);
+    const lines = Math.min(Math.max((args.lines as number) || 20, 1), 1000);
+    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p | tail -n ${lines}`);
     return { content: stdout };
   }
   if (name === 'tmux_pane_is_busy') {
-    const { stdout } = await execAsync(`tmux display-message -t ${target} -p "#{pane_current_command}"`);
+    const { stdout } = await execAsync(`tmux display-message -t "${target}" -p "#{pane_current_command}"`);
     const cmd = stdout.trim();
     return { busy: !['bash', 'zsh', 'fish', 'sh'].includes(cmd), command: cmd };
   }
   if (name === 'tmux_pane_current_command') {
-    const { stdout } = await execAsync(`tmux display-message -t ${target} -p "#{pane_current_command}"`);
+    const { stdout } = await execAsync(`tmux display-message -t "${target}" -p "#{pane_current_command}"`);
     return { command: stdout.trim() };
   }
   return { error: `Unknown tmux tool: ${name}` };
 }
 
 async function handleLogTool(name: string, args: Record<string, unknown>): Promise<unknown> {
-  // Simple implementation - can be extended
   if (name === 'log_sources') {
     const files = await glob('**/*.log', { cwd: MIYABI_LOG_DIR, ignore: 'node_modules/**' });
     return { sources: files };
   }
   if (name === 'log_get_recent' || name === 'log_get_errors' || name === 'log_get_warnings') {
-    const minutes = (args.minutes as number) || 60;
-    const source = (args.source as string) || '*.log';
-    const { stdout } = await execAsync(`find ${MIYABI_LOG_DIR} -name "${source}" -mmin -${minutes} -exec tail -n 100 {} \\;`);
+    const minutes = Math.min(Math.max((args.minutes as number) || 60, 1), 10080); // max 1 week
+    const source = sanitizeShellArg((args.source as string) || '*.log');
+    const { stdout } = await execAsync(`find "${MIYABI_LOG_DIR}" -name "${source}" -mmin -${minutes} -exec tail -n 100 {} \\;`);
     return { logs: stdout };
   }
   if (name === 'log_search') {
-    const { stdout } = await execAsync(`grep -ri "${args.query}" ${MIYABI_LOG_DIR} --include="*.log" | head -100`);
-    return { results: stdout.trim().split('\n') };
+    const query = sanitizeShellArg(args.query as string);
+    const { stdout } = await execAsync(`grep -ri "${query}" "${MIYABI_LOG_DIR}" --include="*.log" | head -100 || true`);
+    return { results: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'log_tail') {
-    const lines = (args.lines as number) || 50;
-    const { stdout } = await execAsync(`tail -n ${lines} ${join(MIYABI_LOG_DIR, args.source as string)}`);
+    const lines = Math.min(Math.max((args.lines as number) || 50, 1), 1000);
+    const source = args.source as string;
+    const safePath = sanitizePath(MIYABI_LOG_DIR, source);
+    const { stdout } = await execAsync(`tail -n ${lines} "${safePath}"`);
     return { content: stdout };
   }
   return { error: `Unknown log tool: ${name}` };
@@ -346,17 +406,16 @@ async function handleResourceTool(name: string, args: Record<string, unknown>): 
     return { avgLoad: load.avgLoad, currentLoad: load.currentLoad };
   }
   if (name === 'resource_overview') {
-    const [cpu, mem, disk, load] = await Promise.all([
+    const [cpu, mem, disk] = await Promise.all([
       si.currentLoad(),
       si.mem(),
-      si.fsSize(),
-      si.currentLoad()
+      si.fsSize()
     ]);
     return {
-      cpu: { load: cpu.currentLoad },
+      cpu: { load: cpu.currentLoad, avgLoad: cpu.avgLoad },
       memory: { usedPercent: (mem.used / mem.total) * 100, freeGb: mem.free / 1024 / 1024 / 1024 },
       disk: disk.map(d => ({ mount: d.mount, usedPercent: d.use })),
-      load: load.avgLoad
+      load: cpu.avgLoad
     };
   }
   if (name === 'resource_processes') {
@@ -399,8 +458,11 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
     return { gateway };
   }
   if (name === 'network_ping') {
-    const host = args.host as string;
-    const { stdout } = await execAsync(`ping -c 3 ${host}`);
+    const host = sanitizeShellArg(args.host as string);
+    if (!host || !/^[a-zA-Z0-9.-]+$/.test(host)) {
+      return { error: 'Invalid hostname' };
+    }
+    const { stdout } = await execAsync(`ping -c 3 "${host}"`);
     return { result: stdout };
   }
   if (name === 'network_bandwidth') {
@@ -415,66 +477,144 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
     ]);
     return { interfaces, stats, gateway };
   }
+  if (name === 'network_dns_lookup') {
+    const hostname = sanitizeShellArg(args.hostname as string);
+    if (!hostname || !/^[a-zA-Z0-9.-]+$/.test(hostname)) {
+      return { error: 'Invalid hostname' };
+    }
+    try {
+      const dns = await import('dns');
+      const { promisify } = await import('util');
+      const lookup = promisify(dns.lookup);
+      const resolve4 = promisify(dns.resolve4);
+      const resolve6 = promisify(dns.resolve6);
+
+      const [address, ipv4, ipv6] = await Promise.allSettled([
+        lookup(hostname),
+        resolve4(hostname),
+        resolve6(hostname)
+      ]);
+
+      return {
+        hostname,
+        address: address.status === 'fulfilled' ? address.value : null,
+        ipv4: ipv4.status === 'fulfilled' ? ipv4.value : [],
+        ipv6: ipv6.status === 'fulfilled' ? ipv6.value : []
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'DNS lookup failed' };
+    }
+  }
   return { error: `Unknown network tool: ${name}` };
 }
 
 async function handleProcessTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   if (name === 'process_info') {
     const pid = args.pid as number;
+    if (!Number.isInteger(pid) || pid <= 0) {
+      return { error: 'Invalid PID' };
+    }
     const { stdout } = await execAsync(`ps -p ${pid} -o pid,ppid,user,%cpu,%mem,command`);
     return { info: stdout };
   }
   if (name === 'process_list') {
     const processes = await si.processes();
-    const limit = (args.limit as number) || 20;
+    const limit = Math.min(Math.max((args.limit as number) || 20, 1), 200);
     return { processes: processes.list.slice(0, limit) };
   }
   if (name === 'process_search') {
-    const query = args.query as string;
-    const { stdout } = await execAsync(`pgrep -l "${query}"`);
-    return { matches: stdout.trim().split('\n') };
+    const query = sanitizeShellArg(args.query as string);
+    const { stdout } = await execAsync(`pgrep -l "${query}" || true`);
+    return { matches: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'process_tree') {
-    const { stdout } = await execAsync('pstree');
-    return { tree: stdout };
+    // pstree may not be available on all systems
+    const hasPstree = await commandExists('pstree');
+    if (hasPstree) {
+      const { stdout } = await execAsync('pstree');
+      return { tree: stdout };
+    } else {
+      // Fallback: use ps to show hierarchy
+      const { stdout } = await execAsync('ps -axo pid,ppid,comm | head -100');
+      return { tree: stdout, note: 'pstree not available, showing ps output' };
+    }
   }
   if (name === 'process_file_descriptors') {
     const pid = args.pid as number;
-    const { stdout } = await execAsync(`lsof -p ${pid} 2>/dev/null | head -50`);
+    if (!Number.isInteger(pid) || pid <= 0) {
+      return { error: 'Invalid PID' };
+    }
+    const { stdout } = await execAsync(`lsof -p ${pid} 2>/dev/null | head -50 || echo "lsof not available or no permissions"`);
     return { fds: stdout };
   }
   if (name === 'process_environment') {
     const pid = args.pid as number;
-    const { stdout } = await execAsync(`cat /proc/${pid}/environ 2>/dev/null | tr '\\0' '\\n' || ps eww -p ${pid}`);
-    return { env: stdout };
+    if (!Number.isInteger(pid) || pid <= 0) {
+      return { error: 'Invalid PID' };
+    }
+    // macOS doesn't have /proc, use ps instead
+    if (platform() === 'darwin') {
+      const { stdout } = await execAsync(`ps eww -p ${pid} 2>/dev/null || echo "Process not found"`);
+      return { env: stdout };
+    } else {
+      const { stdout } = await execAsync(`cat /proc/${pid}/environ 2>/dev/null | tr '\\0' '\\n' || ps eww -p ${pid} 2>/dev/null || echo "Process not found"`);
+      return { env: stdout };
+    }
   }
   if (name === 'process_children') {
     const pid = args.pid as number;
-    const { stdout } = await execAsync(`pgrep -P ${pid}`);
+    if (!Number.isInteger(pid) || pid <= 0) {
+      return { error: 'Invalid PID' };
+    }
+    const { stdout } = await execAsync(`pgrep -P ${pid} || true`);
     return { children: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'process_top') {
-    const limit = (args.limit as number) || 10;
+    const limit = Math.min(Math.max((args.limit as number) || 10, 1), 100);
     const processes = await si.processes();
     const top = processes.list.sort((a, b) => b.cpu - a.cpu).slice(0, limit);
     return { top };
+  }
+  if (name === 'process_kill') {
+    const pid = args.pid as number;
+    const confirm = args.confirm as boolean;
+    const signal = (args.signal as string) || 'SIGTERM';
+
+    if (!confirm) {
+      return { error: 'Confirmation required. Set confirm: true to execute.' };
+    }
+    if (!Number.isInteger(pid) || pid <= 0) {
+      return { error: 'Invalid PID' };
+    }
+    if (!['SIGTERM', 'SIGKILL', 'SIGINT'].includes(signal)) {
+      return { error: 'Invalid signal. Use SIGTERM, SIGKILL, or SIGINT.' };
+    }
+
+    // Get process info before killing
+    try {
+      const { stdout: processInfo } = await execAsync(`ps -p ${pid} -o pid,comm 2>/dev/null`);
+      await execAsync(`kill -${signal} ${pid}`);
+      return { success: true, pid, signal, process: processInfo.trim() };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to kill process' };
+    }
   }
   return { error: `Unknown process tool: ${name}` };
 }
 
 async function handleFileTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   const baseDir = MIYABI_WATCH_DIR;
-  
+
   if (name === 'file_stats') {
-    const path = args.path as string;
-    const fullPath = join(baseDir, path);
+    const userPath = args.path as string;
+    const fullPath = sanitizePath(baseDir, userPath);
     const stats = await stat(fullPath);
-    return { path, size: stats.size, modified: stats.mtime, isDirectory: stats.isDirectory() };
+    return { path: userPath, size: stats.size, modified: stats.mtime, isDirectory: stats.isDirectory() };
   }
   if (name === 'file_recent_changes') {
-    const minutes = (args.minutes as number) || 60;
-    const limit = (args.limit as number) || 20;
-    const { stdout } = await execAsync(`find ${baseDir} -type f -mmin -${minutes} | head -${limit}`);
+    const minutes = Math.min(Math.max((args.minutes as number) || 60, 1), 10080);
+    const limit = Math.min(Math.max((args.limit as number) || 20, 1), 200);
+    const { stdout } = await execAsync(`find "${baseDir}" -type f -mmin -${minutes} 2>/dev/null | head -${limit}`);
     return { files: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'file_search') {
@@ -483,13 +623,13 @@ async function handleFileTool(name: string, args: Record<string, unknown>): Prom
     return { files };
   }
   if (name === 'file_tree') {
-    const depth = (args.depth as number) || 3;
-    const { stdout } = await execAsync(`find ${baseDir} -maxdepth ${depth} -type f | head -100`);
+    const depth = Math.min(Math.max((args.depth as number) || 3, 1), 10);
+    const { stdout } = await execAsync(`find "${baseDir}" -maxdepth ${depth} -type f 2>/dev/null | head -100`);
     return { tree: stdout };
   }
   if (name === 'file_compare') {
-    const path1 = join(baseDir, args.path1 as string);
-    const path2 = join(baseDir, args.path2 as string);
+    const path1 = sanitizePath(baseDir, args.path1 as string);
+    const path2 = sanitizePath(baseDir, args.path2 as string);
     const [stat1, stat2] = await Promise.all([stat(path1), stat(path2)]);
     return {
       path1: { size: stat1.size, modified: stat1.mtime },
@@ -499,8 +639,40 @@ async function handleFileTool(name: string, args: Record<string, unknown>): Prom
   }
   if (name === 'file_changes_since') {
     const since = new Date(args.since as string);
-    const { stdout } = await execAsync(`find ${baseDir} -type f -newermt "${since.toISOString()}" | head -50`);
+    if (isNaN(since.getTime())) {
+      return { error: 'Invalid date format' };
+    }
+    const { stdout } = await execAsync(`find "${baseDir}" -type f -newermt "${since.toISOString()}" 2>/dev/null | head -50`);
     return { files: stdout.trim().split('\n').filter(Boolean) };
+  }
+  if (name === 'file_read') {
+    const userPath = args.path as string;
+    const encoding = (args.encoding as BufferEncoding) || 'utf-8';
+    const maxLines = Math.min(Math.max((args.maxLines as number) || 1000, 1), 5000);
+
+    try {
+      const fullPath = sanitizePath(baseDir, userPath);
+      const stats = await stat(fullPath);
+
+      // Check file size (max 100KB)
+      if (stats.size > 100 * 1024) {
+        return { error: 'File too large (max 100KB)' };
+      }
+
+      const content = await readFile(fullPath, encoding);
+      const lines = content.split('\n');
+      const truncated = lines.length > maxLines;
+
+      return {
+        path: userPath,
+        size: stats.size,
+        lines: lines.length,
+        truncated,
+        content: truncated ? lines.slice(0, maxLines).join('\n') : content
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to read file' };
+    }
   }
   return { error: `Unknown file tool: ${name}` };
 }
@@ -518,19 +690,26 @@ async function handleClaudeTool(name: string, args: Record<string, unknown>): Pr
     try {
       const content = await readFile(CLAUDE_CONFIG_FILE, 'utf-8');
       const config = JSON.parse(content);
-      return { servers: Object.keys(config.mcpServers || {}) };
+      const servers = config.mcpServers || {};
+      return {
+        servers: Object.keys(servers),
+        details: Object.entries(servers).map(([name, cfg]) => ({
+          name,
+          command: (cfg as { command?: string }).command || 'unknown'
+        }))
+      };
     } catch {
       return { error: 'Could not read MCP status' };
     }
   }
   if (name === 'claude_logs') {
-    const lines = (args.lines as number) || 100;
-    const { stdout } = await execAsync(`find ${CLAUDE_LOGS_DIR} -name "*.log" -exec tail -n ${lines} {} \\; 2>/dev/null || echo "No logs found"`);
+    const lines = Math.min(Math.max((args.lines as number) || 100, 1), 1000);
+    const { stdout } = await execAsync(`find "${CLAUDE_LOGS_DIR}" -name "*.log" -exec tail -n ${lines} {} \\; 2>/dev/null || echo "No logs found"`);
     return { logs: stdout };
   }
   if (name === 'claude_log_search') {
-    const query = args.query as string;
-    const { stdout } = await execAsync(`grep -ri "${query}" ${CLAUDE_LOGS_DIR} 2>/dev/null | head -50 || echo "No matches"`);
+    const query = sanitizeShellArg(args.query as string);
+    const { stdout } = await execAsync(`grep -ri "${query}" "${CLAUDE_LOGS_DIR}" 2>/dev/null | head -50 || echo "No matches"`);
     return { results: stdout };
   }
   if (name === 'claude_log_files') {
@@ -541,9 +720,62 @@ async function handleClaudeTool(name: string, args: Record<string, unknown>): Pr
       return { error: 'Could not list log files', path: CLAUDE_LOGS_DIR };
     }
   }
-  if (name === 'claude_session_info' || name === 'claude_background_shells' || name === 'claude_status') {
-    // These require more complex integration
-    return { message: 'Basic implementation - extend as needed' };
+  if (name === 'claude_session_info') {
+    try {
+      // Get Claude process info
+      const { stdout } = await execAsync('pgrep -l -f "Claude" 2>/dev/null || echo ""');
+      const processes = stdout.trim().split('\n').filter(Boolean);
+      return {
+        processes: processes.length,
+        details: processes,
+        configDir: CLAUDE_CONFIG_DIR,
+        logsDir: CLAUDE_LOGS_DIR
+      };
+    } catch {
+      return { processes: 0, configDir: CLAUDE_CONFIG_DIR, logsDir: CLAUDE_LOGS_DIR };
+    }
+  }
+  if (name === 'claude_background_shells') {
+    try {
+      // Find shell processes that might be Claude background shells
+      const { stdout } = await execAsync('ps aux | grep -E "(node|tsx).*claude" 2>/dev/null | grep -v grep || echo ""');
+      const shells = stdout.trim().split('\n').filter(Boolean);
+      return { shells, count: shells.length };
+    } catch {
+      return { shells: [], count: 0 };
+    }
+  }
+  if (name === 'claude_status') {
+    try {
+      // Comprehensive status check
+      const [config, logs, processes] = await Promise.allSettled([
+        readFile(CLAUDE_CONFIG_FILE, 'utf-8').then(c => JSON.parse(c)),
+        readdir(CLAUDE_LOGS_DIR).catch(() => []),
+        execAsync('pgrep -l -f "Claude" 2>/dev/null || echo ""').then(r => r.stdout.trim().split('\n').filter(Boolean))
+      ]);
+
+      return {
+        config: config.status === 'fulfilled' ? {
+          mcpServers: Object.keys(config.value.mcpServers || {}),
+          hasConfig: true
+        } : { hasConfig: false },
+        logs: logs.status === 'fulfilled' ? {
+          fileCount: logs.value.length,
+          files: logs.value.slice(0, 10)
+        } : { fileCount: 0 },
+        processes: processes.status === 'fulfilled' ? {
+          count: processes.value.length,
+          list: processes.value
+        } : { count: 0 },
+        paths: {
+          configDir: CLAUDE_CONFIG_DIR,
+          configFile: CLAUDE_CONFIG_FILE,
+          logsDir: CLAUDE_LOGS_DIR
+        }
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get status' };
+    }
   }
   return { error: `Unknown claude tool: ${name}` };
 }
@@ -648,6 +880,33 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
     });
     return { milestones: response.data };
   }
+  if (name === 'github_list_workflows') {
+    const response = await octokit.actions.listRepoWorkflows({
+      owner, repo,
+      per_page: (args.per_page as number) || 30
+    });
+    return { workflows: response.data.workflows, total_count: response.data.total_count };
+  }
+  if (name === 'github_list_workflow_runs') {
+    const params: {
+      owner: string;
+      repo: string;
+      per_page?: number;
+      workflow_id?: string | number;
+      status?: 'queued' | 'in_progress' | 'completed';
+    } = {
+      owner, repo,
+      per_page: (args.per_page as number) || 30
+    };
+    if (args.workflow_id) {
+      params.workflow_id = args.workflow_id as string;
+    }
+    if (args.status) {
+      params.status = args.status as 'queued' | 'in_progress' | 'completed';
+    }
+    const response = await octokit.actions.listWorkflowRunsForRepo(params);
+    return { runs: response.data.workflow_runs, total_count: response.data.total_count };
+  }
   return { error: `Unknown github tool: ${name}` };
 }
 
@@ -655,7 +914,7 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '2.0.0',
+    version: '2.1.0',
   },
   {
     capabilities: {
@@ -686,7 +945,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start server
 async function main() {
-  console.error('🚀 Miyabi MCP Bundle v2.0.0');
+  console.error('🚀 Miyabi MCP Bundle v2.1.0');
   console.error(`📂 Repository: ${MIYABI_REPO_PATH}`);
   console.error(`🔧 Tools: ${tools.length}`);
   console.error('');

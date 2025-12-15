@@ -14,7 +14,7 @@ describe('Miyabi MCP Bundle', () => {
       // Count tool definitions
       const toolMatches = content.match(/\{ name: '[a-z_]+'/g);
       expect(toolMatches).not.toBeNull();
-      expect(toolMatches!.length).toBeGreaterThanOrEqual(75);
+      expect(toolMatches!.length).toBeGreaterThanOrEqual(82);
     });
 
     it('should have tools in all 9 categories', async () => {

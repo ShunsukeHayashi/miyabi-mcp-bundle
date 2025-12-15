@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing 76 tools across 9 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~700 lines).
+Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing 82 tools across 9 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~950 lines).
 
 ## Commands
 

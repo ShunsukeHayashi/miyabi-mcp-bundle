@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-12-15
+
+### Added
+- **7 New Tools**:
+  - `git_stash_list` - List all git stashes
+  - `git_blame` - Get blame info for files with line range support
+  - `network_dns_lookup` - DNS lookup with IPv4/IPv6 resolution
+  - `process_kill` - Kill processes by PID with confirmation requirement
+  - `file_read` - Read file contents with size limits (max 100KB)
+  - `github_list_workflows` - List GitHub Actions workflows
+  - `github_list_workflow_runs` - List recent workflow runs with status filter
+
+### Changed
+- Increased tool count from 76 to 82
+- Updated all documentation to reflect new tool counts
+
+### Security
+- Added `sanitizeShellArg()` helper to prevent command injection
+- Added `sanitizePath()` helper to prevent path traversal attacks
+- Applied input sanitization across all shell commands (tmux, log, network, process)
+- Added hostname validation for network tools (ping, DNS lookup)
+- Added PID validation for process tools
+- Added file size limits for file_read tool
+
+### Fixed
+- Removed duplicate `si.currentLoad()` call in `resource_overview` handler
+- Completed all `claude_*` stub implementations:
+  - `claude_session_info` - Now shows Claude process info
+  - `claude_background_shells` - Lists node/tsx processes related to Claude
+  - `claude_status` - Comprehensive status with config, logs, and processes
+- Added platform checks for commands (pstree fallback, macOS vs Linux /proc)
+- ESLint compliance: replaced `require('path')` with proper import
+
 ## [2.0.0] - 2025-12-15
 
 ### Added
