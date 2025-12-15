@@ -1,74 +1,107 @@
-# Miyabi MCP Bundle
+<div align="center">
 
-<p align="center">
-  <img src="https://img.shields.io/npm/v/miyabi-mcp-bundle?style=flat-square" alt="npm version">
-  <img src="https://img.shields.io/npm/dm/miyabi-mcp-bundle?style=flat-square" alt="npm downloads">
-  <img src="https://img.shields.io/github/license/ShunsukeHayashi/miyabi-mcp-bundle?style=flat-square" alt="license">
-  <img src="https://img.shields.io/badge/MCP-Compatible-brightgreen?style=flat-square" alt="MCP Compatible">
-</p>
+# 🌸 Miyabi MCP Bundle
 
-<p align="center">
-  <strong>🎯 All-in-One MCP Server for Claude Desktop & AI Agents</strong>
-</p>
+### The Ultimate MCP Server for Claude Desktop & AI Agents
 
-<p align="center">
-  Complete monitoring and control toolkit with <strong>75+ tools</strong> across <strong>9 categories</strong>
-</p>
+[![npm version](https://img.shields.io/npm/v/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
+[![npm downloads](https://img.shields.io/npm/dm/miyabi-mcp-bundle?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/miyabi-mcp-bundle)
+[![GitHub stars](https://img.shields.io/github/stars/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&logo=github&logoColor=white&color=181717)](https://github.com/ShunsukeHayashi/miyabi-mcp-bundle)
+[![License](https://img.shields.io/github/license/ShunsukeHayashi/miyabi-mcp-bundle?style=for-the-badge&color=blue)](LICENSE)
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-≥18-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-00D084?style=for-the-badge&logo=anthropic&logoColor=white)](https://modelcontextprotocol.io/)
+
+<br />
+
+**75+ Tools** · **9 Categories** · **Zero Config** · **Production Ready**
+
+[Installation](#-installation) · [Quick Start](#-quick-start) · [Tool Reference](#-complete-tool-reference) · [日本語](#-日本語)
+
+<br />
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   ███╗   ███╗██╗██╗   ██╗ █████╗ ██████╗ ██╗                   │
+│   ████╗ ████║██║╚██╗ ██╔╝██╔══██╗██╔══██╗██║                   │
+│   ██╔████╔██║██║ ╚████╔╝ ███████║██████╔╝██║                   │
+│   ██║╚██╔╝██║██║  ╚██╔╝  ██╔══██║██╔══██╗██║                   │
+│   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
+│   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
+│                                                                 │
+│        All-in-One MCP Server for Claude Desktop                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+</div>
 
 ---
 
-[English](#english) | [日本語](#japanese)
+## ✨ Why Miyabi?
+
+> **Miyabi (雅)** - Japanese for "elegance" and "refinement"
+
+Transform your Claude Desktop into a **powerful development command center** with a single MCP server that provides everything you need:
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎯 **One Server, 75+ Tools**
+No more juggling multiple MCP servers. Miyabi bundles everything into one elegant package.
+
+### ⚡ **Zero Configuration**
+Works instantly out of the box. Just add to Claude Desktop and go.
+
+</td>
+<td width="50%">
+
+### 🔒 **Production Tested**
+Battle-tested in real development environments with enterprise-grade reliability.
+
+### 🌍 **Cross-Platform**
+Seamlessly works on macOS, Linux, and Windows.
+
+</td>
+</tr>
+</table>
 
 ---
-
-<a name="english"></a>
-
-## 🚀 Features
-
-- **75+ Tools** across 9 categories in a single MCP server
-- **Zero Configuration** - Works out of the box
-- **Production Ready** - Battle-tested in real development environments
-- **TypeScript** - Fully typed with excellent IDE support
-
-### Tool Categories
-
-| Category | Tools | Description |
-|----------|-------|-------------|
-| 🔀 **Git Inspector** | 10 | Git status, branches, diff, history |
-| 📺 **Tmux Monitor** | 9 | Session, window, pane management |
-| 📋 **Log Aggregator** | 6 | Log search, errors, warnings |
-| 💻 **Resource Monitor** | 8 | CPU, memory, disk, system info |
-| 🌐 **Network Inspector** | 8 | Interfaces, connections, ports |
-| ⚙️ **Process Inspector** | 8 | Process list, tree, details |
-| 📁 **File Watcher** | 6 | File changes, search, compare |
-| 🤖 **Claude Monitor** | 8 | Claude Desktop config, logs, MCP status |
-| 🐙 **GitHub Integration** | 12 | Issues, PRs, labels, milestones |
 
 ## 📦 Installation
 
-### Option 1: npx (Recommended)
+### Quick Start (Recommended)
 
 ```bash
 npx miyabi-mcp-bundle
 ```
 
-### Option 2: Global Install
+### Global Installation
 
 ```bash
 npm install -g miyabi-mcp-bundle
 miyabi-mcp
 ```
 
-### Option 3: Local Install
+---
 
-```bash
-npm install miyabi-mcp-bundle
-npx miyabi-mcp-bundle
-```
+## ⚙️ Claude Desktop Setup
 
-## ⚙️ Claude Desktop Configuration
+Add to your Claude Desktop configuration:
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+<details>
+<summary><b>📍 Config File Locations</b></summary>
+
+| OS | Path |
+|---|---|
+| **macOS** | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| **Windows** | `%APPDATA%\Claude\claude_desktop_config.json` |
+| **Linux** | `~/.config/claude/claude_desktop_config.json` |
+
+</details>
 
 ```json
 {
@@ -85,71 +118,253 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-### Environment Variables
+<details>
+<summary><b>🔧 Environment Variables</b></summary>
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MIYABI_REPO_PATH` | No | Git repository path (default: current directory) |
-| `MIYABI_LOG_DIR` | No | Log files directory |
-| `MIYABI_WATCH_DIR` | No | File watch directory |
-| `GITHUB_TOKEN` | For GitHub tools | GitHub Personal Access Token |
-| `GITHUB_DEFAULT_OWNER` | No | Default repository owner |
-| `GITHUB_DEFAULT_REPO` | No | Default repository name |
+| Variable | Required | Default | Description |
+|----------|:--------:|---------|-------------|
+| `MIYABI_REPO_PATH` | - | `cwd()` | Git repository path |
+| `MIYABI_LOG_DIR` | - | Same as repo | Log files directory |
+| `MIYABI_WATCH_DIR` | - | Same as repo | File watch directory |
+| `GITHUB_TOKEN` | For GitHub | - | GitHub Personal Access Token |
+| `GITHUB_DEFAULT_OWNER` | - | - | Default repository owner |
+| `GITHUB_DEFAULT_REPO` | - | - | Default repository name |
 
-## 🎯 Quick Start
+</details>
+
+---
+
+## 🚀 Quick Start
 
 After configuration, try these commands in Claude Desktop:
 
 ```
-Check my git status
-Show system resources
-List recent file changes
-Search logs for errors
-List open GitHub issues
+📊 "Show me the system resources"
+🔀 "What's my git status?"
+📁 "List recently changed files"
+🐛 "Search logs for errors"
+🐙 "Show open GitHub issues"
 ```
 
-## 📖 Tool Reference
+---
 
-### P0 - Critical (Use Daily)
+## 🛠️ Complete Tool Reference
+
+<div align="center">
+
+### 75+ Tools Across 9 Categories
+
+</div>
+
+<details open>
+<summary><h3>🔀 Git Inspector <code>10 tools</code></h3></summary>
 
 | Tool | Description |
-|------|-------------|
-| `git_status` | Get current git status |
-| `log_get_errors` | Get error-level logs |
-| `resource_overview` | Get system resource overview |
-| `github_list_issues` | List GitHub issues |
-
-### P1 - High Priority
-
-| Tool | Description |
-|------|-------------|
-| `git_diff` | Get unstaged changes |
+|:-----|:------------|
+| `git_status` | Get current git status (modified, staged, untracked) |
+| `git_branch_list` | List all branches with remote tracking info |
+| `git_current_branch` | Get current branch name |
 | `git_log` | Get commit history |
-| `tmux_list_panes` | List tmux panes |
+| `git_worktree_list` | List all git worktrees |
+| `git_diff` | Get diff of unstaged changes |
+| `git_staged_diff` | Get diff of staged changes |
+| `git_remote_list` | List all remotes |
+| `git_branch_ahead_behind` | Check commits ahead/behind origin |
+| `git_file_history` | Get commit history for a specific file |
+
+</details>
+
+<details>
+<summary><h3>📺 Tmux Monitor <code>9 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `tmux_list_sessions` | List all tmux sessions |
+| `tmux_list_windows` | List windows in a session |
+| `tmux_list_panes` | List panes in a window |
+| `tmux_send_keys` | Send keys to a pane |
+| `tmux_pane_capture` | Capture pane content |
+| `tmux_pane_search` | Search pane content |
+| `tmux_pane_tail` | Get last N lines from pane |
+| `tmux_pane_is_busy` | Check if pane is busy |
+| `tmux_pane_current_command` | Get current command in pane |
+
+</details>
+
+<details>
+<summary><h3>📋 Log Aggregator <code>6 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `log_sources` | List all log sources |
+| `log_get_recent` | Get recent log entries |
+| `log_search` | Search logs for a pattern |
+| `log_get_errors` | Get error-level logs |
+| `log_get_warnings` | Get warning-level logs |
+| `log_tail` | Tail a specific log file |
+
+</details>
+
+<details>
+<summary><h3>💻 Resource Monitor <code>8 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `resource_cpu` | Get CPU usage |
+| `resource_memory` | Get memory usage |
+| `resource_disk` | Get disk usage |
+| `resource_load` | Get system load average |
+| `resource_overview` | Get comprehensive resource overview |
+| `resource_processes` | Get process list sorted by resource |
+| `resource_uptime` | Get system uptime |
+| `resource_network_stats` | Get network statistics |
+
+</details>
+
+<details>
+<summary><h3>🌐 Network Inspector <code>8 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `network_interfaces` | List network interfaces |
+| `network_connections` | List active connections |
+| `network_listening_ports` | List listening ports |
+| `network_stats` | Get network statistics |
+| `network_gateway` | Get default gateway |
+| `network_ping` | Ping a host |
+| `network_bandwidth` | Get bandwidth usage |
+| `network_overview` | Get network overview |
+
+</details>
+
+<details>
+<summary><h3>⚙️ Process Inspector <code>8 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `process_info` | Get process details by PID |
+| `process_list` | List all processes |
+| `process_search` | Search processes by name |
+| `process_tree` | Get process tree |
+| `process_file_descriptors` | Get file descriptors for process |
+| `process_environment` | Get environment variables for process |
+| `process_children` | Get child processes |
+| `process_top` | Get top processes by CPU/memory |
+
+</details>
+
+<details>
+<summary><h3>📁 File Watcher <code>6 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `file_stats` | Get file/directory stats |
 | `file_recent_changes` | Get recently changed files |
-| `process_top` | Get top processes by CPU |
+| `file_search` | Search files by glob pattern |
+| `file_tree` | Get directory tree |
+| `file_compare` | Compare two files |
+| `file_changes_since` | Get files changed since timestamp |
 
-[See full tool reference →](./docs/TOOL_REFERENCE.md)
+</details>
 
-## 🔧 Development
+<details>
+<summary><h3>🤖 Claude Monitor <code>8 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `claude_config` | Get Claude Desktop configuration |
+| `claude_mcp_status` | Get MCP server status |
+| `claude_session_info` | Get Claude session info |
+| `claude_logs` | Get Claude logs |
+| `claude_log_search` | Search Claude logs |
+| `claude_log_files` | List Claude log files |
+| `claude_background_shells` | Get background shell info |
+| `claude_status` | Get comprehensive Claude status |
+
+</details>
+
+<details>
+<summary><h3>🐙 GitHub Integration <code>12 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `github_list_issues` | List GitHub issues |
+| `github_get_issue` | Get issue details |
+| `github_create_issue` | Create new issue |
+| `github_update_issue` | Update issue |
+| `github_add_comment` | Add comment to issue/PR |
+| `github_list_prs` | List pull requests |
+| `github_get_pr` | Get PR details |
+| `github_create_pr` | Create pull request |
+| `github_merge_pr` | Merge pull request |
+| `github_list_labels` | List repository labels |
+| `github_add_labels` | Add labels to issue/PR |
+| `github_list_milestones` | List milestones |
+
+</details>
+
+---
+
+## 🏗️ Architecture
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                    Claude Desktop                          │
+└─────────────────────────┬──────────────────────────────────┘
+                          │ MCP Protocol
+                          ▼
+┌────────────────────────────────────────────────────────────┐
+│                 Miyabi MCP Bundle                          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │                   Tool Router                        │  │
+│  └──────────────────────────────────────────────────────┘  │
+│      │        │        │        │        │        │        │
+│      ▼        ▼        ▼        ▼        ▼        ▼        │
+│  ┌──────┐┌──────┐┌──────┐┌──────┐┌──────┐┌──────┐        │
+│  │ Git  ││ Tmux ││ Log  ││Resource││Network││GitHub│  ...  │
+│  │ 10   ││  9   ││  6   ││   8   ││   8   ││  12  │        │
+│  └──────┘└──────┘└──────┘└──────┘└──────┘└──────┘        │
+└────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 👨‍💻 Development
 
 ```bash
-# Clone
+# Clone the repository
 git clone https://github.com/ShunsukeHayashi/miyabi-mcp-bundle.git
 cd miyabi-mcp-bundle
 
-# Install
+# Install dependencies
 npm install
 
-# Development mode
+# Development mode (with hot reload)
 npm run dev
 
-# Build
+# Build for production
 npm run build
 
-# Test
+# Run linter
+npm run lint
+
+# Run tests
 npm test
 ```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
 
 ## 📄 License
 
@@ -157,19 +372,68 @@ MIT © [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
 
 ---
 
-<a name="japanese"></a>
+<div align="center">
 
-## 🚀 特徴（日本語）
+# 🇯🇵 日本語
 
-- **75以上のツール** を9カテゴリに統合した単一MCPサーバー
+</div>
+
+## ✨ Miyabiとは？
+
+> **雅 (Miyabi)** - 洗練された優美さを意味する日本語
+
+Claude Desktopを**強力な開発コマンドセンター**に変換する、単一のMCPサーバーです。
+
+### 🎯 特徴
+
+- **75以上のツール** を9カテゴリに統合
 - **設定不要** - すぐに使える
 - **本番環境対応** - 実際の開発環境でテスト済み
-- **TypeScript** - 完全な型定義とIDEサポート
+- **クロスプラットフォーム** - macOS, Linux, Windows対応
 
-### ツールカテゴリ
+## 📦 インストール
+
+```bash
+# npx（推奨）
+npx miyabi-mcp-bundle
+
+# グローバルインストール
+npm install -g miyabi-mcp-bundle
+```
+
+## ⚙️ Claude Desktop 設定
+
+```json
+{
+  "mcpServers": {
+    "miyabi": {
+      "command": "npx",
+      "args": ["-y", "miyabi-mcp-bundle"],
+      "env": {
+        "MIYABI_REPO_PATH": "/path/to/your/repo",
+        "GITHUB_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}
+```
+
+## 🚀 クイックスタート
+
+設定後、Claude Desktopで以下を試してください：
+
+```
+📊 「システムリソースを表示して」
+🔀 「gitの状態を確認して」
+📁 「最近変更されたファイルを見せて」
+🐛 「エラーログを検索して」
+🐙 「GitHubのIssue一覧を表示して」
+```
+
+## 🛠️ ツールカテゴリ
 
 | カテゴリ | ツール数 | 説明 |
-|----------|----------|------|
+|:---------|:--------:|:-----|
 | 🔀 **Git Inspector** | 10 | Git状態、ブランチ、差分、履歴 |
 | 📺 **Tmux Monitor** | 9 | セッション、ウィンドウ、ペイン管理 |
 | 📋 **Log Aggregator** | 6 | ログ検索、エラー、警告 |
@@ -180,65 +444,19 @@ MIT © [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
 | 🤖 **Claude Monitor** | 8 | Claude Desktop設定、ログ、MCP状態 |
 | 🐙 **GitHub Integration** | 12 | Issue、PR、ラベル、マイルストーン |
 
-## 📦 インストール
-
-### オプション1: npx（推奨）
-
-```bash
-npx miyabi-mcp-bundle
-```
-
-### オプション2: グローバルインストール
-
-```bash
-npm install -g miyabi-mcp-bundle
-miyabi-mcp
-```
-
-## ⚙️ Claude Desktop 設定
-
-Claude Desktopの設定ファイルに追加:
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "miyabi": {
-      "command": "npx",
-      "args": ["-y", "miyabi-mcp-bundle"],
-      "env": {
-        "MIYABI_REPO_PATH": "/path/to/your/repo",
-        "GITHUB_TOKEN": "ghp_your_token_here"
-      }
-    }
-  }
-}
-```
-
-## 🎯 クイックスタート
-
-設定後、Claude Desktopで以下を試してください：
-
-```
-gitの状態を確認して
-システムリソースを表示して
-最近変更されたファイルを見せて
-エラーログを検索して
-GitHubのIssue一覧を表示して
-```
-
-## 🤝 コントリビューション
-
-Issue、Pull Requestを歓迎します！
-
-## 📄 ライセンス
-
-MIT © [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
-
 ---
 
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/ShunsukeHayashi">Shunsuke Hayashi</a>
-</p>
+<div align="center">
+
+### ⭐ Star this repo if you find it useful!
+
+<br />
+
+Made with ❤️ by [Shunsuke Hayashi](https://github.com/ShunsukeHayashi)
+
+<br />
+
+[![GitHub](https://img.shields.io/badge/GitHub-ShunsukeHayashi-181717?style=for-the-badge&logo=github)](https://github.com/ShunsukeHayashi)
+[![Twitter](https://img.shields.io/badge/Twitter-@shuhayas-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/shuhayas)
+
+</div>
