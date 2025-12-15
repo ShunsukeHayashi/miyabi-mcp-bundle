@@ -152,7 +152,7 @@ After configuration, try these commands in Claude Desktop:
 
 <div align="center">
 
-### 75+ Tools Across 9 Categories
+### 76 Tools Across 9 Categories
 
 </div>
 

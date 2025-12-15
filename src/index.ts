@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  * 
- * A comprehensive MCP server with 75+ tools across 9 categories:
+ * A comprehensive MCP server with 76 tools across 9 categories:
  * - Git Inspector (10 tools)
  * - Tmux Monitor (9 tools)
  * - Log Aggregator (6 tools)
@@ -655,7 +655,7 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '1.0.0',
+    version: '2.0.0',
   },
   {
     capabilities: {
@@ -686,7 +686,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start server
 async function main() {
-  console.error('🚀 Miyabi MCP Bundle v1.0.0');
+  console.error('🚀 Miyabi MCP Bundle v2.0.0');
   console.error(`📂 Repository: ${MIYABI_REPO_PATH}`);
   console.error(`🔧 Tools: ${tools.length}`);
   console.error('');
