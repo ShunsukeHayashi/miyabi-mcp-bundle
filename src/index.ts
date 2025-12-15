@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 152 tools across 16 categories:
+ * A comprehensive MCP server with 158 tools across 17 categories:
  * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
@@ -19,9 +19,10 @@
  * - Kubernetes (6 tools)
  * - Spec-Kit (9 tools) - Spec-Driven Development
  * - MCP Tool Discovery (3 tools) - Search and discover tools
+ * - Database Foundation (6 tools) - SQLite/PostgreSQL/MySQL
  * + System Health (1 tool)
  *
- * @version 3.4.0
+ * @version 3.5.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -366,6 +367,14 @@ const tools: Tool[] = [
   { name: 'mcp_search_tools', description: 'Search MCP tools by name or description', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query (matches name or description)' }, category: { type: 'string', description: 'Filter by category prefix (git, tmux, docker, etc)' } } } },
   { name: 'mcp_list_categories', description: 'List all tool categories with counts', inputSchema: { type: 'object', properties: {} } },
   { name: 'mcp_get_tool_info', description: 'Get detailed information about a specific tool', inputSchema: { type: 'object', properties: { tool: { type: 'string', description: 'Tool name' } }, required: ['tool'] } },
+
+  // === Database Foundation (6 tools) ===
+  { name: 'db_connect', description: 'Test database connection', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'], description: 'Database type' }, connection: { type: 'string', description: 'Connection string or file path (SQLite)' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type'] } },
+  { name: 'db_tables', description: 'List all tables in database', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type'] } },
+  { name: 'db_schema', description: 'Get schema for a table', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, table: { type: 'string', description: 'Table name' }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type', 'table'] } },
+  { name: 'db_query', description: 'Execute read-only SQL query (SELECT only)', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, query: { type: 'string', description: 'SQL SELECT query' }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' }, limit: { type: 'number', description: 'Max rows (default 100)' } }, required: ['type', 'query'] } },
+  { name: 'db_explain', description: 'Explain query execution plan', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, query: { type: 'string', description: 'SQL query to analyze' }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type', 'query'] } },
+  { name: 'db_health', description: 'Check database health and stats', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['sqlite', 'postgresql', 'mysql'] }, connection: { type: 'string' }, host: { type: 'string' }, port: { type: 'number' }, database: { type: 'string' }, user: { type: 'string' }, password: { type: 'string' } }, required: ['type'] } },
 ];
 
 // ========== Tool Handlers ==========
@@ -526,6 +535,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('k8s_')) return await handleK8sTool(name, args);
     if (name.startsWith('speckit_')) return await handleSpeckitTool(name, args);
     if (name.startsWith('mcp_')) return await handleMcpTool(name, args);
+    if (name.startsWith('db_')) return await handleDbTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -2516,11 +2526,280 @@ async function handleMcpTool(name: string, args: Record<string, unknown>): Promi
   return { error: `Unknown mcp tool: ${name}` };
 }
 
+// ========== Database Foundation Handler ==========
+interface DbConnectionArgs {
+  type: 'sqlite' | 'postgresql' | 'mysql';
+  connection?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  user?: string;
+  password?: string;
+}
+
+function buildDbCommand(args: DbConnectionArgs, sqlCommand: string): { cmd: string; env?: Record<string, string> } {
+  const { type, connection, host, port, database, user, password } = args;
+
+  switch (type) {
+    case 'sqlite': {
+      const dbPath = sanitizeShellArg(connection || ':memory:');
+      return { cmd: `sqlite3 -json "${dbPath}" "${sqlCommand}"` };
+    }
+    case 'postgresql': {
+      const pgHost = sanitizeShellArg(host || 'localhost');
+      const pgPort = port || 5432;
+      const pgDb = sanitizeShellArg(database || 'postgres');
+      const pgUser = sanitizeShellArg(user || 'postgres');
+      const env: Record<string, string> = {};
+      if (password) env.PGPASSWORD = password;
+      return {
+        cmd: `psql -h "${pgHost}" -p ${pgPort} -U "${pgUser}" -d "${pgDb}" -t -A -c "${sqlCommand}"`,
+        env
+      };
+    }
+    case 'mysql': {
+      const myHost = sanitizeShellArg(host || 'localhost');
+      const myPort = port || 3306;
+      const myDb = sanitizeShellArg(database || '');
+      const myUser = sanitizeShellArg(user || 'root');
+      const dbFlag = myDb ? `-D "${myDb}"` : '';
+      const passFlag = password ? `-p"${sanitizeShellArg(password)}"` : '';
+      return {
+        cmd: `mysql -h "${myHost}" -P ${myPort} -u "${myUser}" ${passFlag} ${dbFlag} -N -e "${sqlCommand}"`
+      };
+    }
+    default:
+      throw new Error(`Unsupported database type: ${type}`);
+  }
+}
+
+async function handleDbTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const dbArgs = args as unknown as DbConnectionArgs;
+  const dbType = dbArgs.type;
+
+  if (!dbType) {
+    return { error: 'Database type required (sqlite, postgresql, mysql)' };
+  }
+
+  // Check if CLI tool exists
+  const cliTool = dbType === 'sqlite' ? 'sqlite3' : dbType === 'postgresql' ? 'psql' : 'mysql';
+  if (!await commandExists(cliTool)) {
+    return { error: `${cliTool} CLI not found. Install ${dbType} client tools.` };
+  }
+
+  // db_connect - Test connection
+  if (name === 'db_connect') {
+    try {
+      const testQuery = dbType === 'sqlite' ? 'SELECT 1' :
+        dbType === 'postgresql' ? 'SELECT 1' : 'SELECT 1';
+      const { cmd, env } = buildDbCommand(dbArgs, testQuery);
+      const { stdout } = await execAsync(cmd, { timeout: 10000, env: { ...process.env, ...env } });
+      return {
+        success: true,
+        type: dbType,
+        message: `Connected to ${dbType} successfully`,
+        result: stdout.trim()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        type: dbType,
+        error: error instanceof Error ? error.message : 'Connection failed'
+      };
+    }
+  }
+
+  // db_tables - List tables
+  if (name === 'db_tables') {
+    try {
+      let query: string;
+      switch (dbType) {
+        case 'sqlite':
+          query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
+          break;
+        case 'postgresql':
+          query = "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename";
+          break;
+        case 'mysql':
+          query = 'SHOW TABLES';
+          break;
+      }
+      const { cmd, env } = buildDbCommand(dbArgs, query);
+      const { stdout } = await execAsync(cmd, { timeout: 30000, env: { ...process.env, ...env } });
+
+      const tables = stdout.trim().split('\n').filter(Boolean);
+      return {
+        type: dbType,
+        count: tables.length,
+        tables
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to list tables' };
+    }
+  }
+
+  // db_schema - Get table schema
+  if (name === 'db_schema') {
+    const table = sanitizeShellArg(args.table as string);
+    if (!table) return { error: 'Table name required' };
+
+    try {
+      let query: string;
+      switch (dbType) {
+        case 'sqlite':
+          query = `PRAGMA table_info(${table})`;
+          break;
+        case 'postgresql':
+          query = `SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = '${table}' ORDER BY ordinal_position`;
+          break;
+        case 'mysql':
+          query = `DESCRIBE ${table}`;
+          break;
+      }
+      const { cmd, env } = buildDbCommand(dbArgs, query);
+      const { stdout } = await execAsync(cmd, { timeout: 30000, env: { ...process.env, ...env } });
+
+      return {
+        type: dbType,
+        table,
+        schema: stdout.trim()
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Failed to get schema' };
+    }
+  }
+
+  // db_query - Execute SELECT query
+  if (name === 'db_query') {
+    const query = args.query as string;
+    if (!query) return { error: 'Query required' };
+
+    // Security: Only allow SELECT queries
+    const upperQuery = query.trim().toUpperCase();
+    if (!upperQuery.startsWith('SELECT') && !upperQuery.startsWith('WITH')) {
+      return { error: 'Only SELECT queries allowed (read-only). Use SELECT or WITH...SELECT.' };
+    }
+
+    // Block dangerous patterns
+    const dangerousPatterns = [
+      /;\s*(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|TRUNCATE|GRANT|REVOKE)/i,
+      /INTO\s+OUTFILE/i,
+      /INTO\s+DUMPFILE/i,
+      /LOAD_FILE/i
+    ];
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(query)) {
+        return { error: 'Query contains blocked pattern' };
+      }
+    }
+
+    const limit = Math.min(Math.max((args.limit as number) || 100, 1), 1000);
+    let limitedQuery = query;
+    if (!upperQuery.includes('LIMIT')) {
+      limitedQuery = `${query.replace(/;?\s*$/, '')} LIMIT ${limit}`;
+    }
+
+    try {
+      const { cmd, env } = buildDbCommand(dbArgs, sanitizeShellArg(limitedQuery));
+      const { stdout } = await execAsync(cmd, { timeout: 60000, env: { ...process.env, ...env } });
+
+      const rows = stdout.trim().split('\n').filter(Boolean);
+      return {
+        type: dbType,
+        query: limitedQuery,
+        rowCount: rows.length,
+        result: rows
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Query failed' };
+    }
+  }
+
+  // db_explain - Query execution plan
+  if (name === 'db_explain') {
+    const query = args.query as string;
+    if (!query) return { error: 'Query required' };
+
+    try {
+      let explainQuery: string;
+      switch (dbType) {
+        case 'sqlite':
+          explainQuery = `EXPLAIN QUERY PLAN ${query}`;
+          break;
+        case 'postgresql':
+          explainQuery = `EXPLAIN (FORMAT TEXT) ${query}`;
+          break;
+        case 'mysql':
+          explainQuery = `EXPLAIN ${query}`;
+          break;
+      }
+      const { cmd, env } = buildDbCommand(dbArgs, sanitizeShellArg(explainQuery));
+      const { stdout } = await execAsync(cmd, { timeout: 30000, env: { ...process.env, ...env } });
+
+      return {
+        type: dbType,
+        query,
+        plan: stdout.trim()
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Explain failed' };
+    }
+  }
+
+  // db_health - Database health check
+  if (name === 'db_health') {
+    try {
+      const health: Record<string, unknown> = {
+        type: dbType,
+        connected: false
+      };
+
+      // Test connection
+      const testQuery = 'SELECT 1';
+      const { cmd: testCmd, env } = buildDbCommand(dbArgs, testQuery);
+      try {
+        await execAsync(testCmd, { timeout: 10000, env: { ...process.env, ...env } });
+        health.connected = true;
+      } catch {
+        return { ...health, error: 'Connection failed' };
+      }
+
+      // Get database-specific stats
+      let statsQuery: string;
+      switch (dbType) {
+        case 'sqlite':
+          statsQuery = "SELECT 'tables' as metric, COUNT(*) as value FROM sqlite_master WHERE type='table'";
+          break;
+        case 'postgresql':
+          statsQuery = "SELECT 'size' as metric, pg_database_size(current_database()) as value";
+          break;
+        case 'mysql':
+          statsQuery = "SELECT 'uptime' as metric, VARIABLE_VALUE as value FROM performance_schema.global_status WHERE VARIABLE_NAME = 'Uptime'";
+          break;
+      }
+
+      const { cmd: statsCmd, env: statsEnv } = buildDbCommand(dbArgs, statsQuery);
+      try {
+        const { stdout } = await execAsync(statsCmd, { timeout: 10000, env: { ...process.env, ...statsEnv } });
+        health.stats = stdout.trim();
+      } catch {
+        health.stats = 'Unable to fetch stats';
+      }
+
+      return health;
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Health check failed' };
+    }
+  }
+
+  return { error: `Unknown db tool: ${name}` };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.4.0',
+    version: '3.5.0',
   },
   {
     capabilities: {
@@ -2550,7 +2829,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   console.error('');
   console.error('┌────────────────────────────────────────────────┐');
-  console.error('│  🌸 Miyabi MCP Bundle v3.4.0                   │');
+  console.error('│  🌸 Miyabi MCP Bundle v3.5.0                   │');
   console.error('│  The Most Comprehensive MCP Server             │');
   console.error('├────────────────────────────────────────────────┤');
   console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);

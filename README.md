@@ -17,7 +17,7 @@
 
 <br />
 
-### 🎯 **152 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
+### 🎯 **158 MCP Tools** · **38 Agents** · **22 Skills** · **56 Commands** · **24 Hooks**
 
 <br />
 
@@ -39,7 +39,7 @@
 │   ██║ ╚═╝ ██║██║   ██║   ██║  ██║██████╔╝██║                   │
 │   ╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝                   │
 │                                                                 │
-│    The All-in-One MCP Server for Claude Desktop  v3.4.0        │
+│    The All-in-One MCP Server for Claude Desktop  v3.5.0        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -58,8 +58,8 @@ Transform your Claude Desktop into a **powerful development command center** wit
 <tr>
 <td width="50%">
 
-### 🎯 **152 Tools in One Package**
-The largest collection of MCP tools: 152 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
+### 🎯 **158 Tools in One Package**
+The largest collection of MCP tools: 158 Tools + 38 Agents + 22 Skills + 56 Commands + 24 Hooks.
 
 ### ⚡ **Zero Configuration**
 Works instantly out of the box. Just add to Claude Desktop and go.
@@ -87,7 +87,7 @@ Comprehensive system health validation and diagnostics.
 
 | Feature | Miyabi | Other MCP Servers |
 |---------|:------:|:-----------------:|
-| Total Tools | **152** | 10-30 |
+| Total Tools | **158** | 10-30 |
 | Security Sanitization | ✅ | ❌ |
 | Built-in Caching | ✅ | ❌ |
 | Health Check | ✅ | ❌ |
@@ -499,6 +499,27 @@ Validates: Git connectivity, GitHub API status, system resources, and overall he
 | `mcp_search_tools` | **NEW** Search MCP tools by name or description |
 | `mcp_list_categories` | **NEW** List all tool categories with counts |
 | `mcp_get_tool_info` | **NEW** Get detailed information about a specific tool |
+
+</details>
+
+<details>
+<summary><h3>🗄️ Database Foundation <code>6 tools</code></h3></summary>
+
+| Tool | Description |
+|:-----|:------------|
+| `db_connect` | **NEW** Test database connection (SQLite/PostgreSQL/MySQL) |
+| `db_tables` | **NEW** List all tables in database |
+| `db_schema` | **NEW** Get schema for a specific table |
+| `db_query` | **NEW** Execute read-only SQL query (SELECT only) |
+| `db_explain` | **NEW** Explain query execution plan |
+| `db_health` | **NEW** Check database health and statistics |
+
+**Supported Databases:**
+- **SQLite**: File-based, zero configuration
+- **PostgreSQL**: Full-featured relational database
+- **MySQL**: Popular open-source database
+
+**Security**: All queries are SELECT-only. Dangerous patterns (DROP, DELETE, etc.) are blocked.
 
 </details>
 

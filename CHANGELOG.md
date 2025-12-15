@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2025-12-15
+
+### Added
+- **🗄️ Database Foundation** - SQL database integration (Issue #8)
+- **158 Total Tools** - Expansion from 152 to 158 tools (+6)
+- **1 New Category**:
+  - **Database (6 tools)**: SQLite/PostgreSQL/MySQL support via CLI
+- **6 Database Tools**:
+  - `db_connect` - Test database connection
+  - `db_tables` - List all tables in database
+  - `db_schema` - Get schema for a specific table
+  - `db_query` - Execute read-only SQL query (SELECT only)
+  - `db_explain` - Explain query execution plan
+  - `db_health` - Check database health and statistics
+
+### Security
+- All db_query operations are SELECT-only
+- Dangerous SQL patterns (DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE) blocked
+- Input sanitization on all database parameters
+- Environment variable support for secure password handling
+
+### Changed
+- Categories increased from 16 to 17
+- Added CLI-based database support without requiring driver dependencies
+
 ## [3.4.0] - 2025-12-15
 
 ### Added

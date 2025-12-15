@@ -4,15 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **140 tools** across 14 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~1900 lines).
+Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **158 tools** across 17 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~3000 lines).
 
-### Key Features (v3.3.0)
-- **140 MCP Tools** across 14 categories
+### Key Features (v3.5.0)
+- **158 MCP Tools** across 17 categories
 - **Enterprise-grade Security**: Input sanitization, path traversal protection, symlink attack prevention
 - **Intelligent Caching**: Built-in LRU cache with TTL support
 - **Health Check System**: Comprehensive system validation
 - **Cross-Platform**: Linux systemd support, Windows Event Log support
 - **Container Management**: Docker, Docker Compose, Kubernetes integration
+- **Spec-Driven Development**: GitHub spec-kit methodology integration
+- **MCP Tool Discovery**: Search and discover tools dynamically
+- **Database Integration**: SQLite, PostgreSQL, MySQL support via CLI
 
 ## Commands
 
@@ -44,8 +47,13 @@ src/index.ts
 │   ├── handleProcessTool()  (process_*)
 │   ├── handleFileTool()     (file_*)
 │   ├── handleClaudeTool()   (claude_*)
-│   └── handleGitHubTool()   (github_*)
-└── MCP Server Setup (lines 656-700)
+│   ├── handleGitHubTool()   (github_*)
+│   ├── handleDockerTool()   (docker_*, compose_*)
+│   ├── handleK8sTool()      (k8s_*)
+│   ├── handleSpeckitTool()  (speckit_*)
+│   ├── handleMcpTool()      (mcp_*)
+│   └── handleDbTool()       (db_*)
+└── MCP Server Setup
 ```
 
 ### Tool Naming Convention
