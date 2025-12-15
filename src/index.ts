@@ -30,6 +30,7 @@ import { Octokit } from '@octokit/rest';
 import * as si from 'systeminformation';
 import { glob } from 'glob';
 import { readFile, readdir, stat } from 'fs/promises';
+import { realpathSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir, platform } from 'os';
 import { exec } from 'child_process';
@@ -43,6 +44,22 @@ const dnsResolve4 = promisify(dns.resolve4);
 const dnsResolve6 = promisify(dns.resolve6);
 
 // ========== Security Helpers ==========
+
+// Input size limits to prevent DoS attacks
+const MAX_QUERY_LENGTH = 1000;
+const MAX_PATH_LENGTH = 4096;
+const MAX_HOSTNAME_LENGTH = 253;
+
+/**
+ * Validate input string length
+ */
+function validateInputLength(value: string, maxLength: number, fieldName: string): string | null {
+  if (value && value.length > maxLength) {
+    return `${fieldName} exceeds maximum length of ${maxLength} characters`;
+  }
+  return null;
+}
+
 /**
  * Sanitize shell argument to prevent command injection
  */
@@ -52,12 +69,21 @@ function sanitizeShellArg(arg: string): string {
 }
 
 /**
- * Validate and sanitize path to prevent traversal attacks
+ * Validate and sanitize path to prevent traversal and symlink attacks
  */
 function sanitizePath(basePath: string, userPath: string): string {
   const resolved = resolve(basePath, userPath);
-  if (!resolved.startsWith(resolve(basePath))) {
+  const normalizedBase = resolve(basePath);
+  if (!resolved.startsWith(normalizedBase)) {
     throw new Error('Path traversal detected');
+  }
+  // Symlink attack protection: resolve real path if file exists
+  if (existsSync(resolved)) {
+    const realPath = realpathSync(resolved);
+    if (!realPath.startsWith(normalizedBase)) {
+      throw new Error('Symlink traversal detected');
+    }
+    return realPath;
   }
   return resolved;
 }
@@ -446,12 +472,20 @@ async function handleLogTool(name: string, args: Record<string, unknown>): Promi
     return { logs: stdout };
   }
   if (name === 'log_search') {
-    const query = sanitizeShellArg(args.query as string);
-    const { stdout } = await execAsync(`grep -ri "${query}" "${MIYABI_LOG_DIR}" --include="*.log" 2>/dev/null | head -100 || true`);
+    const query = args.query as string;
+    const lengthError = validateInputLength(query, MAX_QUERY_LENGTH, 'Query');
+    if (lengthError) return { error: lengthError };
+    const safeQuery = sanitizeShellArg(query);
+    const { stdout } = await execAsync(`grep -riF "${safeQuery}" "${MIYABI_LOG_DIR}" --include="*.log" 2>/dev/null | head -100 || true`);
     return { results: stdout.trim().split('\n').filter(Boolean) };
   }
   if (name === 'log_tail') {
     const source = args.source as string;
+    if (!source) {
+      return { error: 'Source file is required' };
+    }
+    const pathError = validateInputLength(source, MAX_PATH_LENGTH, 'Source path');
+    if (pathError) return { error: pathError };
     const lines = Math.min(Math.max((args.lines as number) || 50, 1), 1000);
     const safePath = sanitizePath(MIYABI_LOG_DIR, source);
     const { stdout } = await execAsync(`tail -n ${lines} "${safePath}"`);
@@ -562,11 +596,13 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
   }
   if (name === 'network_ping') {
     const host = args.host as string;
+    const lengthError = validateInputLength(host, MAX_HOSTNAME_LENGTH, 'Hostname');
+    if (lengthError) return { error: lengthError };
     if (!isValidHostname(host)) {
       return { error: 'Invalid hostname format' };
     }
     const count = Math.min(Math.max((args.count as number) || 3, 1), 10);
-    const pingFlag = platform() === 'darwin' ? '-c' : '-c';
+    const pingFlag = platform() === 'win32' ? '-n' : '-c';
     const { stdout } = await execAsync(`ping ${pingFlag} ${count} "${host}"`, { timeout: 30000 });
     return { result: stdout };
   }
@@ -584,6 +620,8 @@ async function handleNetworkTool(name: string, args: Record<string, unknown>): P
   }
   if (name === 'network_dns_lookup') {
     const hostname = args.hostname as string;
+    const lengthError = validateInputLength(hostname, MAX_HOSTNAME_LENGTH, 'Hostname');
+    if (lengthError) return { error: lengthError };
     if (!isValidHostname(hostname)) {
       return { error: 'Invalid hostname format' };
     }
@@ -873,8 +911,11 @@ async function handleClaudeTool(name: string, args: Record<string, unknown>): Pr
     return { logs: stdout };
   }
   if (name === 'claude_log_search') {
-    const query = sanitizeShellArg(args.query as string);
-    const { stdout } = await execAsync(`grep -ri "${query}" "${CLAUDE_LOGS_DIR}" 2>/dev/null | head -50 || echo "No matches"`);
+    const query = args.query as string;
+    const lengthError = validateInputLength(query, MAX_QUERY_LENGTH, 'Query');
+    if (lengthError) return { error: lengthError };
+    const safeQuery = sanitizeShellArg(query);
+    const { stdout } = await execAsync(`grep -riF "${safeQuery}" "${CLAUDE_LOGS_DIR}" 2>/dev/null | head -50 || echo "No matches"`);
     return { results: stdout };
   }
   if (name === 'claude_log_files') {
