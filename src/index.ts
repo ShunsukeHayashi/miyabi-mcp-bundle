@@ -50,6 +50,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import * as dns from 'dns';
+// Society Bridge API (Issue #18)
+import { handleBridgeSend, handleBridgeReceive, handleBridgeContextShare, handleBridgeContextGet, handleBridgeQueueStatus, handleBridgeHistory } from './handlers/bridge.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -320,6 +322,13 @@ const tools: Tool[] = [
 
   // === System Health (1 tool) ===
   { name: 'health_check', description: 'Run comprehensive health check: Git, GitHub API, system resources, and MCP status.', inputSchema: { type: 'object', properties: {} } },
+  // === Society Bridge API (Issue #18 - 6 tools) ===
+  { name: "bridge_send", description: "Send message between Societies with priority and TTL.", inputSchema: { type: "object", properties: { from_society: { type: "string" }, to_society: { type: "string" }, type: { type: "string" }, payload: { type: "object" }, priority: { type: "string" }, ttl: { type: "number" } }, required: ["from_society", "to_society", "payload"] } },
+  { name: "bridge_receive", description: "Receive pending messages for a Society.", inputSchema: { type: "object", properties: { society: { type: "string" }, limit: { type: "number" }, acknowledge: { type: "boolean" } }, required: ["society"] } },
+  { name: "bridge_context_share", description: "Share context data with other Societies.", inputSchema: { type: "object", properties: { owner_society: { type: "string" }, share_with: { type: "array" }, context_type: { type: "string" }, data: { type: "object" }, ttl: { type: "number" } }, required: ["owner_society", "share_with", "context_type", "data"] } },
+  { name: "bridge_context_get", description: "Retrieve shared context by ID or list accessible contexts.", inputSchema: { type: "object", properties: { context_id: { type: "string" }, society: { type: "string" }, context_type: { type: "string" } }, required: ["society"] } },
+  { name: "bridge_queue_status", description: "Get message queue status with depth and priorities.", inputSchema: { type: "object", properties: { society: { type: "string" } } } },
+  { name: "bridge_history", description: "Get message history with filters.", inputSchema: { type: "object", properties: { society: { type: "string" }, from: { type: "string" }, to: { type: "string" }, limit: { type: "number" } } } },
 
   // === Linux systemd (3 tools) ===
   { name: 'linux_systemd_units', description: 'List systemd units with status. Filter by type (service, timer) or state (Linux only).', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'], description: 'Filter by unit type' }, state: { type: 'string', enum: ['running', 'failed', 'inactive'], description: 'Filter by state' } } } },
@@ -554,6 +563,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('claude_')) return await handleClaudeTool(name, args);
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
+    if (name.startsWith('bridge_')) return await handleBridgeTool(name, args);
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
@@ -1446,6 +1456,19 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
     };
   }
   return { error: `Unknown github tool: ${name}` };
+}
+
+// === Society Bridge API (Issue #18) ===
+async function handleBridgeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "bridge_send": return await handleBridgeSend(args as { from_society: string; to_society: string; type?: string; payload: Record<string, unknown>; priority?: string; ttl?: number });
+    case "bridge_receive": return await handleBridgeReceive(args as { society: string; limit?: number; acknowledge?: boolean });
+    case "bridge_context_share": return await handleBridgeContextShare(args as { owner_society: string; share_with: string[]; context_type: string; data: Record<string, unknown>; ttl?: number });
+    case "bridge_context_get": return await handleBridgeContextGet(args as { context_id?: string; society: string; context_type?: string });
+    case "bridge_queue_status": return await handleBridgeQueueStatus(args as { society?: string });
+    case "bridge_history": return await handleBridgeHistory(args as { society?: string; from?: string; to?: string; limit?: number });
+    default: throw new Error(`Unknown bridge tool: ${name}`);
+  }
 }
 
 async function handleHealthCheck(): Promise<unknown> {

@@ -23,3 +23,14 @@ export { handleHealthCheck, healthCheckTool } from './health.js';
 // export * from './file.js';
 // export * from './claude.js';
 // export * from './github.js';
+
+// Society Bridge API (Issue #18)
+export {
+  handleBridgeSend,
+  handleBridgeReceive,
+  handleBridgeContextShare,
+  handleBridgeContextGet,
+  handleBridgeQueueStatus,
+  handleBridgeHistory,
+  bridgeTools
+} from './bridge.js';
