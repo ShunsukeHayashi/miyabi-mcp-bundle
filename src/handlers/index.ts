@@ -32,3 +32,12 @@ export {
 // export * from './file.js';
 // export * from './claude.js';
 // export * from './github.js';
+
+// Metrics Aggregator (Issue #17)
+export { handleMetricsCollect, handleMetricsAggregate, handleMetricsQuery, handleMetricsExport, handleMetricsDashboard } from './metrics.js';
+
+// Society Bridge API (Issue #18)
+export { handleBridgeSend, handleBridgeReceive, handleBridgeContextShare, handleBridgeContextGet, handleBridgeQueueStatus, handleBridgeHistory } from './bridge.js';
+
+// Context Foundation (Issue #13)
+export { handleContextStore, handleContextGet, handleContextList, handleContextExpire, handleContextShare, handleContextSearch } from './context.js';

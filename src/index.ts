@@ -52,6 +52,10 @@ import { createHash } from 'crypto';
 import * as dns from 'dns';
 // Society Health Check Pro (Issue #16)
 import { handleSocietyHealthAll, handleSocietyHealthSingle, handleSocietyAgentStatus, handleSocietyMcpStatus, handleSocietyMetricsSummary } from './handlers/society-health.js';
+// Metrics, Bridge, Context (Issues #17, #18, #13)
+import { handleMetricsCollect, handleMetricsAggregate, handleMetricsQuery, handleMetricsExport, handleMetricsDashboard } from './handlers/metrics.js';
+import { handleBridgeSend, handleBridgeReceive, handleBridgeContextShare, handleBridgeContextGet, handleBridgeQueueStatus, handleBridgeHistory } from './handlers/bridge.js';
+import { handleContextStore, handleContextGet, handleContextList, handleContextExpire, handleContextShare, handleContextSearch } from './handlers/context.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -328,6 +332,26 @@ const tools: Tool[] = [
   { name: "society_agent_status", description: "Get status of all agents within a Society or all Societies.", inputSchema: { type: "object", properties: { society: { type: "string", description: "Optional: filter by Society name" } } } },
   { name: "society_mcp_status", description: "Check status of MCP servers used by Societies.", inputSchema: { type: "object", properties: {} } },
   { name: "society_metrics_summary", description: "Get aggregated metrics summary for all Societies.", inputSchema: { type: "object", properties: {} } },
+  // === Metrics Aggregator (Issue #17 - 5 tools) ===
+  { name: "metrics_collect", description: "Collect system metrics.", inputSchema: { type: "object", properties: { society: { type: "string" } } } },
+  { name: "metrics_aggregate", description: "Aggregate metrics with statistics.", inputSchema: { type: "object", properties: { period: { type: "string" } } } },
+  { name: "metrics_query", description: "Query metrics with filters.", inputSchema: { type: "object", properties: { metric_type: { type: "string" }, society: { type: "string" }, limit: { type: "number" } } } },
+  { name: "metrics_export", description: "Export metrics JSON/CSV.", inputSchema: { type: "object", properties: { format: { type: "string", enum: ["json", "csv"] } } } },
+  { name: "metrics_dashboard", description: "Dashboard data generation.", inputSchema: { type: "object", properties: {} } },
+  // === Society Bridge API (Issue #18 - 6 tools) ===
+  { name: "bridge_send", description: "Send message between Societies.", inputSchema: { type: "object", properties: { from_society: { type: "string" }, to_society: { type: "string" }, payload: { type: "object" }, priority: { type: "string" } }, required: ["from_society", "to_society", "payload"] } },
+  { name: "bridge_receive", description: "Receive pending messages.", inputSchema: { type: "object", properties: { society: { type: "string" }, limit: { type: "number" }, acknowledge: { type: "boolean" } }, required: ["society"] } },
+  { name: "bridge_context_share", description: "Share context with Societies.", inputSchema: { type: "object", properties: { owner_society: { type: "string" }, share_with: { type: "array" }, context_type: { type: "string" }, data: { type: "object" } }, required: ["owner_society", "share_with", "context_type", "data"] } },
+  { name: "bridge_context_get", description: "Get shared context.", inputSchema: { type: "object", properties: { context_id: { type: "string" }, society: { type: "string" } }, required: ["society"] } },
+  { name: "bridge_queue_status", description: "Get queue status.", inputSchema: { type: "object", properties: { society: { type: "string" } } } },
+  { name: "bridge_history", description: "Get message history.", inputSchema: { type: "object", properties: { society: { type: "string" }, limit: { type: "number" } } } },
+  // === Context Foundation (Issue #13 - 6 tools) ===
+  { name: "context_store", description: "Store context data.", inputSchema: { type: "object", properties: { key: { type: "string" }, society: { type: "string" }, data: { type: "object" }, ttl: { type: "number" } }, required: ["key", "society", "data"] } },
+  { name: "context_get", description: "Get stored context.", inputSchema: { type: "object", properties: { id: { type: "string" }, key: { type: "string" }, society: { type: "string" } }, required: ["society"] } },
+  { name: "context_list", description: "List accessible contexts.", inputSchema: { type: "object", properties: { society: { type: "string" }, include_shared: { type: "boolean" } }, required: ["society"] } },
+  { name: "context_expire", description: "Manage context expiration.", inputSchema: { type: "object", properties: { id: { type: "string" }, society: { type: "string" }, new_ttl: { type: "number" } }, required: ["society"] } },
+  { name: "context_share", description: "Share context access.", inputSchema: { type: "object", properties: { id: { type: "string" }, society: { type: "string" }, share_with: { type: "array" } }, required: ["society", "share_with"] } },
+  { name: "context_search", description: "Search contexts.", inputSchema: { type: "object", properties: { society: { type: "string" }, query: { type: "string" } }, required: ["society", "query"] } },
 
   // === Linux systemd (3 tools) ===
   { name: 'linux_systemd_units', description: 'List systemd units with status. Filter by type (service, timer) or state (Linux only).', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'], description: 'Filter by unit type' }, state: { type: 'string', enum: ['running', 'failed', 'inactive'], description: 'Filter by state' } } } },
@@ -563,6 +587,9 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
     if (name.startsWith('society_')) return await handleSocietyTool(name, args);
+    if (name.startsWith('metrics_')) return await handleMetricsTool(name, args);
+    if (name.startsWith('bridge_')) return await handleBridgeTool(name, args);
+    if (name.startsWith('context_')) return await handleContextTool(name, args);
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
@@ -1458,6 +1485,42 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
 }
 
 // === Society Health Check Pro (Issue #16) ===
+// === Metrics Tool Handler ===
+async function handleMetricsTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "metrics_collect": return await handleMetricsCollect(args as { society?: string });
+    case "metrics_aggregate": return await handleMetricsAggregate(args.period as string | undefined);
+    case "metrics_query": return await handleMetricsQuery(args as { metric_type?: string; society?: string; limit?: number });
+    case "metrics_export": return await handleMetricsExport((args.format as "json" | "csv") || "json");
+    case "metrics_dashboard": return await handleMetricsDashboard();
+    default: throw new Error(`Unknown metrics tool: ${name}`);
+  }
+}
+// === Bridge Tool Handler ===
+async function handleBridgeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "bridge_send": return await handleBridgeSend(args as { from_society: string; to_society: string; payload: Record<string, unknown>; priority?: string });
+    case "bridge_receive": return await handleBridgeReceive(args as { society: string; limit?: number; acknowledge?: boolean });
+    case "bridge_context_share": return await handleBridgeContextShare(args as { owner_society: string; share_with: string[]; context_type: string; data: Record<string, unknown> });
+    case "bridge_context_get": return await handleBridgeContextGet(args as { context_id?: string; society: string });
+    case "bridge_queue_status": return await handleBridgeQueueStatus(args as { society?: string });
+    case "bridge_history": return await handleBridgeHistory(args as { society?: string; limit?: number });
+    default: throw new Error(`Unknown bridge tool: ${name}`);
+  }
+}
+// === Context Tool Handler ===
+async function handleContextTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "context_store": return await handleContextStore(args as { key: string; society: string; data: Record<string, unknown>; ttl?: number });
+    case "context_get": return await handleContextGet(args as { id?: string; key?: string; society: string });
+    case "context_list": return await handleContextList(args as { society: string; include_shared?: boolean });
+    case "context_expire": return await handleContextExpire(args as { id?: string; society: string; new_ttl?: number });
+    case "context_share": return await handleContextShare(args as { id?: string; society: string; share_with: string[] });
+    case "context_search": return await handleContextSearch(args as { society: string; query: string });
+    default: throw new Error(`Unknown context tool: ${name}`);
+  }
+}
+
 async function handleSocietyTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case "society_health_all": return await handleSocietyHealthAll();
