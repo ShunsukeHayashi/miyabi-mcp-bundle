@@ -50,6 +50,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import * as dns from 'dns';
+// Society Health Check Pro (Issue #16)
+import { handleSocietyHealthAll, handleSocietyHealthSingle, handleSocietyAgentStatus, handleSocietyMcpStatus, handleSocietyMetricsSummary } from './handlers/society-health.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -320,6 +322,12 @@ const tools: Tool[] = [
 
   // === System Health (1 tool) ===
   { name: 'health_check', description: 'Run comprehensive health check: Git, GitHub API, system resources, and MCP status.', inputSchema: { type: 'object', properties: {} } },
+  // === Society Health Check Pro (Issue #16 - 5 tools) ===
+  { name: "society_health_all", description: "Check health status of all 26 Miyabi Societies at once. Returns comprehensive health report.", inputSchema: { type: "object", properties: {} } },
+  { name: "society_health_single", description: "Check detailed health status of a single Society.", inputSchema: { type: "object", properties: { society: { type: "string", description: "Society name (e.g., investment, sales, marketing)" } }, required: ["society"] } },
+  { name: "society_agent_status", description: "Get status of all agents within a Society or all Societies.", inputSchema: { type: "object", properties: { society: { type: "string", description: "Optional: filter by Society name" } } } },
+  { name: "society_mcp_status", description: "Check status of MCP servers used by Societies.", inputSchema: { type: "object", properties: {} } },
+  { name: "society_metrics_summary", description: "Get aggregated metrics summary for all Societies.", inputSchema: { type: "object", properties: {} } },
 
   // === Linux systemd (3 tools) ===
   { name: 'linux_systemd_units', description: 'List systemd units with status. Filter by type (service, timer) or state (Linux only).', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'], description: 'Filter by unit type' }, state: { type: 'string', enum: ['running', 'failed', 'inactive'], description: 'Filter by state' } } } },
@@ -554,6 +562,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('claude_')) return await handleClaudeTool(name, args);
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
+    if (name.startsWith('society_')) return await handleSocietyTool(name, args);
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
@@ -1446,6 +1455,18 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
     };
   }
   return { error: `Unknown github tool: ${name}` };
+}
+
+// === Society Health Check Pro (Issue #16) ===
+async function handleSocietyTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "society_health_all": return await handleSocietyHealthAll();
+    case "society_health_single": return await handleSocietyHealthSingle(args.society as string);
+    case "society_agent_status": return await handleSocietyAgentStatus(args.society as string | undefined);
+    case "society_mcp_status": return await handleSocietyMcpStatus();
+    case "society_metrics_summary": return await handleSocietyMetricsSummary();
+    default: throw new Error(`Unknown society tool: ${name}`);
+  }
 }
 
 async function handleHealthCheck(): Promise<unknown> {
