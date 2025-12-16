@@ -23,3 +23,13 @@ export { handleHealthCheck, healthCheckTool } from './health.js';
 // export * from './file.js';
 // export * from './claude.js';
 // export * from './github.js';
+
+// Metrics Aggregator (Issue #17)
+export {
+  handleMetricsCollect,
+  handleMetricsAggregate,
+  handleMetricsQuery,
+  handleMetricsExport,
+  handleMetricsDashboard,
+  metricsTools
+} from './metrics.js';

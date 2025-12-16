@@ -50,6 +50,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import * as dns from 'dns';
+// Metrics Aggregator (Issue #17)
+import { handleMetricsCollect, handleMetricsAggregate, handleMetricsQuery, handleMetricsExport, handleMetricsDashboard } from './handlers/metrics.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -320,6 +322,12 @@ const tools: Tool[] = [
 
   // === System Health (1 tool) ===
   { name: 'health_check', description: 'Run comprehensive health check: Git, GitHub API, system resources, and MCP status.', inputSchema: { type: 'object', properties: {} } },
+  // === Metrics Aggregator (Issue #17 - 5 tools) ===
+  { name: "metrics_collect", description: "Collect current metrics from system and Societies.", inputSchema: { type: "object", properties: { society: { type: "string", description: "Optional: filter by Society" } } } },
+  { name: "metrics_aggregate", description: "Aggregate metrics over a time period. Returns summary statistics.", inputSchema: { type: "object", properties: { period: { type: "string", description: "Time period (ISO8601 interval)" } } } },
+  { name: "metrics_query", description: "Query specific metrics with filters.", inputSchema: { type: "object", properties: { metric_type: { type: "string" }, society: { type: "string" }, from: { type: "string" }, to: { type: "string" }, limit: { type: "number" } } } },
+  { name: "metrics_export", description: "Export metrics in JSON or CSV format.", inputSchema: { type: "object", properties: { format: { type: "string", enum: ["json", "csv"] } } } },
+  { name: "metrics_dashboard", description: "Generate dashboard data with system health and alerts.", inputSchema: { type: "object", properties: {} } },
 
   // === Linux systemd (3 tools) ===
   { name: 'linux_systemd_units', description: 'List systemd units with status. Filter by type (service, timer) or state (Linux only).', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'], description: 'Filter by unit type' }, state: { type: 'string', enum: ['running', 'failed', 'inactive'], description: 'Filter by state' } } } },
@@ -554,6 +562,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('claude_')) return await handleClaudeTool(name, args);
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
+    if (name.startsWith('metrics_')) return await handleMetricsTool(name, args);
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
@@ -1446,6 +1455,18 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
     };
   }
   return { error: `Unknown github tool: ${name}` };
+}
+
+// === Metrics Aggregator (Issue #17) ===
+async function handleMetricsTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "metrics_collect": return await handleMetricsCollect(args as { society?: string });
+    case "metrics_aggregate": return await handleMetricsAggregate(args.period as string | undefined);
+    case "metrics_query": return await handleMetricsQuery(args as { metric_type?: string; society?: string; from?: string; to?: string; limit?: number });
+    case "metrics_export": return await handleMetricsExport((args.format as "json" | "csv") || "json");
+    case "metrics_dashboard": return await handleMetricsDashboard();
+    default: throw new Error(`Unknown metrics tool: ${name}`);
+  }
 }
 
 async function handleHealthCheck(): Promise<unknown> {
