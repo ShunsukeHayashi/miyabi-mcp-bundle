@@ -50,6 +50,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import * as dns from 'dns';
+// Context Foundation (Issue #13)
+import { handleContextStore, handleContextGet, handleContextList, handleContextExpire, handleContextShare, handleContextSearch } from './handlers/context.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -320,6 +322,13 @@ const tools: Tool[] = [
 
   // === System Health (1 tool) ===
   { name: 'health_check', description: 'Run comprehensive health check: Git, GitHub API, system resources, and MCP status.', inputSchema: { type: 'object', properties: {} } },
+  // === Context Foundation (Issue #13 - 6 tools) ===
+  { name: "context_store", description: "Store context data with TTL and sharing.", inputSchema: { type: "object", properties: { key: { type: "string" }, society: { type: "string" }, data: { type: "object" }, tags: { type: "array" }, ttl: { type: "number" }, share_with: { type: "array" } }, required: ["key", "society", "data"] } },
+  { name: "context_get", description: "Retrieve stored context by ID or key.", inputSchema: { type: "object", properties: { id: { type: "string" }, key: { type: "string" }, society: { type: "string" } }, required: ["society"] } },
+  { name: "context_list", description: "List all contexts accessible to a Society.", inputSchema: { type: "object", properties: { society: { type: "string" }, tags: { type: "array" }, include_shared: { type: "boolean" } }, required: ["society"] } },
+  { name: "context_expire", description: "Manage context expiration.", inputSchema: { type: "object", properties: { id: { type: "string" }, key: { type: "string" }, society: { type: "string" }, new_ttl: { type: "number" } }, required: ["society"] } },
+  { name: "context_share", description: "Share or revoke context access.", inputSchema: { type: "object", properties: { id: { type: "string" }, key: { type: "string" }, society: { type: "string" }, share_with: { type: "array" }, revoke: { type: "boolean" } }, required: ["society", "share_with"] } },
+  { name: "context_search", description: "Search contexts by query.", inputSchema: { type: "object", properties: { society: { type: "string" }, query: { type: "string" }, tags: { type: "array" }, include_shared: { type: "boolean" } }, required: ["society", "query"] } },
 
   // === Linux systemd (3 tools) ===
   { name: 'linux_systemd_units', description: 'List systemd units with status. Filter by type (service, timer) or state (Linux only).', inputSchema: { type: 'object', properties: { type: { type: 'string', enum: ['service', 'timer', 'socket', 'mount', 'target'], description: 'Filter by unit type' }, state: { type: 'string', enum: ['running', 'failed', 'inactive'], description: 'Filter by state' } } } },
@@ -554,6 +563,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('claude_')) return await handleClaudeTool(name, args);
     if (name.startsWith('github_')) return await handleGitHubTool(name, args);
     if (name === 'health_check') return await handleHealthCheck();
+    if (name.startsWith('context_')) return await handleContextTool(name, args);
     if (name.startsWith('linux_')) return await handleLinuxTool(name, args);
     if (name.startsWith('windows_')) return await handleWindowsTool(name, args);
     if (name.startsWith('docker_')) return await handleDockerTool(name, args);
@@ -1446,6 +1456,19 @@ async function handleGitHubTool(name: string, args: Record<string, unknown>): Pr
     };
   }
   return { error: `Unknown github tool: ${name}` };
+}
+
+// === Context Foundation (Issue #13) ===
+async function handleContextTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  switch (name) {
+    case "context_store": return await handleContextStore(args as { key: string; society: string; data: Record<string, unknown>; tags?: string[]; ttl?: number; share_with?: string[] });
+    case "context_get": return await handleContextGet(args as { id?: string; key?: string; society: string });
+    case "context_list": return await handleContextList(args as { society: string; tags?: string[]; include_shared?: boolean });
+    case "context_expire": return await handleContextExpire(args as { id?: string; key?: string; society: string; new_ttl?: number });
+    case "context_share": return await handleContextShare(args as { id?: string; key?: string; society: string; share_with: string[]; revoke?: boolean });
+    case "context_search": return await handleContextSearch(args as { society: string; query: string; tags?: string[]; include_shared?: boolean });
+    default: throw new Error(`Unknown context tool: ${name}`);
+  }
 }
 
 async function handleHealthCheck(): Promise<unknown> {

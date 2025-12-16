@@ -23,3 +23,14 @@ export { handleHealthCheck, healthCheckTool } from './health.js';
 // export * from './file.js';
 // export * from './claude.js';
 // export * from './github.js';
+
+// Context Foundation (Issue #13)
+export {
+  handleContextStore,
+  handleContextGet,
+  handleContextList,
+  handleContextExpire,
+  handleContextShare,
+  handleContextSearch,
+  contextTools
+} from './context.js';
