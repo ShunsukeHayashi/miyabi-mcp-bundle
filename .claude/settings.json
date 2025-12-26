@@ -1,0 +1,53 @@
+{
+  "skills": {
+    "git-operations": {
+      "path": ".claude/skills/git-operations",
+      "enabled": true
+    },
+    "github-integration": {
+      "path": ".claude/skills/github-integration",
+      "enabled": true
+    },
+    "docker-management": {
+      "path": ".claude/skills/docker-management",
+      "enabled": true
+    },
+    "system-monitoring": {
+      "path": ".claude/skills/system-monitoring",
+      "enabled": true
+    },
+    "network-diagnostics": {
+      "path": ".claude/skills/network-diagnostics",
+      "enabled": true
+    },
+    "kubernetes-operations": {
+      "path": ".claude/skills/kubernetes-operations",
+      "enabled": true
+    },
+    "log-analysis": {
+      "path": ".claude/skills/log-analysis",
+      "enabled": true
+    },
+    "process-management": {
+      "path": ".claude/skills/process-management",
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "path": ".claude/skills/sequential-thinking",
+      "enabled": true
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(docker:*)",
+      "Bash(kubectl:*)",
+      "Bash(tmux:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ]
+  }
+}

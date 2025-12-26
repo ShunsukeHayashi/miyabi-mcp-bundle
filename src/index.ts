@@ -36,7 +36,13 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+  Tool,
+  Resource,
+  Prompt
 } from '@modelcontextprotocol/sdk/types.js';
 import { simpleGit, SimpleGit } from 'simple-git';
 import { Octokit } from '@octokit/rest';
@@ -433,6 +439,267 @@ const tools: Tool[] = [
   { name: 'gen_random', description: 'Generate random integers or floats within a range.', inputSchema: { type: 'object', properties: { min: { type: 'number', description: 'Minimum value (default: 0)' }, max: { type: 'number', description: 'Maximum value (default: 100)' }, count: { type: 'number', description: 'Number of values (max 1000)' }, type: { type: 'string', enum: ['integer', 'float'], description: 'Number type' } }, required: [] } },
   { name: 'gen_hash', description: 'Hash a string using MD5, SHA1, SHA256, or SHA512. Output in hex or base64.', inputSchema: { type: 'object', properties: { input: { type: 'string', description: 'String to hash' }, algorithm: { type: 'string', enum: ['md5', 'sha1', 'sha256', 'sha512'], description: 'Hash algorithm (default: sha256)' }, encoding: { type: 'string', enum: ['hex', 'base64'], description: 'Output encoding' } }, required: ['input'] } },
   { name: 'gen_password', description: 'Generate secure password with configurable character sets (default: 16 chars).', inputSchema: { type: 'object', properties: { length: { type: 'number', description: 'Password length (8-128, default: 16)' }, uppercase: { type: 'boolean', description: 'Include uppercase letters' }, lowercase: { type: 'boolean', description: 'Include lowercase letters' }, numbers: { type: 'boolean', description: 'Include numbers' }, symbols: { type: 'boolean', description: 'Include symbols' }, excludeSimilar: { type: 'boolean', description: 'Exclude similar characters (0O1lI)' } } } },
+];
+
+// ========== Resources ==========
+const resources: Resource[] = [
+  // === Git Resources ===
+  {
+    uri: 'miyabi://git/status',
+    name: 'Git Repository Status',
+    description: 'Current git repository status including branch, staged changes, and modified files',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://git/branches',
+    name: 'Git Branches',
+    description: 'List of all local and remote branches with current branch indicator',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://git/recent-commits',
+    name: 'Recent Commits',
+    description: 'Last 10 commits with hash, author, date, and message',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://git/remotes',
+    name: 'Git Remotes',
+    description: 'Configured remote repositories',
+    mimeType: 'application/json'
+  },
+
+  // === System Resources ===
+  {
+    uri: 'miyabi://system/info',
+    name: 'System Information',
+    description: 'CPU, memory, disk, and OS information',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://system/processes',
+    name: 'Running Processes',
+    description: 'Top processes by CPU and memory usage',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://system/network',
+    name: 'Network Status',
+    description: 'Network interfaces and connectivity status',
+    mimeType: 'application/json'
+  },
+
+  // === Docker Resources ===
+  {
+    uri: 'miyabi://docker/containers',
+    name: 'Docker Containers',
+    description: 'List of all Docker containers with status',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://docker/images',
+    name: 'Docker Images',
+    description: 'Local Docker images',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://docker/compose',
+    name: 'Docker Compose Status',
+    description: 'Docker Compose project status',
+    mimeType: 'application/json'
+  },
+
+  // === GitHub Resources ===
+  {
+    uri: 'miyabi://github/issues',
+    name: 'GitHub Issues',
+    description: 'Open issues for the current repository',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://github/pulls',
+    name: 'GitHub Pull Requests',
+    description: 'Open pull requests for the current repository',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://github/workflows',
+    name: 'GitHub Workflows',
+    description: 'GitHub Actions workflow status',
+    mimeType: 'application/json'
+  },
+
+  // === Tmux Resources ===
+  {
+    uri: 'miyabi://tmux/sessions',
+    name: 'Tmux Sessions',
+    description: 'Active tmux sessions and windows',
+    mimeType: 'application/json'
+  },
+
+  // === Kubernetes Resources ===
+  {
+    uri: 'miyabi://k8s/pods',
+    name: 'Kubernetes Pods',
+    description: 'Kubernetes pods status in current namespace',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://k8s/services',
+    name: 'Kubernetes Services',
+    description: 'Kubernetes services in current namespace',
+    mimeType: 'application/json'
+  },
+
+  // === Tool Catalog ===
+  {
+    uri: 'miyabi://catalog/tools',
+    name: 'Tool Catalog',
+    description: 'Complete list of available MCP tools organized by category',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'miyabi://catalog/categories',
+    name: 'Tool Categories',
+    description: 'List of tool categories with descriptions',
+    mimeType: 'application/json'
+  }
+];
+
+// ========== Prompts ==========
+const prompts: Prompt[] = [
+  // === Git Workflow Prompts ===
+  {
+    name: 'git-commit',
+    description: 'Create a well-structured git commit with conventional commit format',
+    arguments: [
+      { name: 'type', description: 'Commit type: feat, fix, docs, style, refactor, test, chore', required: true },
+      { name: 'scope', description: 'Scope of the change (optional)', required: false },
+      { name: 'description', description: 'Brief description of the change', required: true }
+    ]
+  },
+  {
+    name: 'git-review',
+    description: 'Review current git changes and suggest improvements',
+    arguments: [
+      { name: 'focus', description: 'Focus area: security, performance, style, all', required: false }
+    ]
+  },
+  {
+    name: 'git-branch-strategy',
+    description: 'Suggest a branch naming strategy and workflow',
+    arguments: [
+      { name: 'feature', description: 'Feature or task description', required: true }
+    ]
+  },
+
+  // === Docker Prompts ===
+  {
+    name: 'docker-debug',
+    description: 'Debug a Docker container issue',
+    arguments: [
+      { name: 'container', description: 'Container name or ID', required: true },
+      { name: 'issue', description: 'Description of the issue', required: false }
+    ]
+  },
+  {
+    name: 'docker-compose-setup',
+    description: 'Help set up a Docker Compose configuration',
+    arguments: [
+      { name: 'services', description: 'Comma-separated list of services needed', required: true }
+    ]
+  },
+
+  // === GitHub Prompts ===
+  {
+    name: 'github-issue-create',
+    description: 'Create a well-structured GitHub issue',
+    arguments: [
+      { name: 'type', description: 'Issue type: bug, feature, enhancement, question', required: true },
+      { name: 'title', description: 'Issue title', required: true },
+      { name: 'description', description: 'Detailed description', required: true }
+    ]
+  },
+  {
+    name: 'github-pr-review',
+    description: 'Review a GitHub pull request',
+    arguments: [
+      { name: 'pr_number', description: 'Pull request number', required: true },
+      { name: 'focus', description: 'Focus: code, tests, docs, security', required: false }
+    ]
+  },
+
+  // === System Analysis Prompts ===
+  {
+    name: 'system-health-check',
+    description: 'Perform a comprehensive system health check',
+    arguments: [
+      { name: 'focus', description: 'Focus: cpu, memory, disk, network, all', required: false }
+    ]
+  },
+  {
+    name: 'process-troubleshoot',
+    description: 'Troubleshoot a process issue',
+    arguments: [
+      { name: 'process_name', description: 'Name of the process to investigate', required: true }
+    ]
+  },
+
+  // === Network Prompts ===
+  {
+    name: 'network-diagnose',
+    description: 'Diagnose network connectivity issues',
+    arguments: [
+      { name: 'target', description: 'Target host or IP to check', required: false }
+    ]
+  },
+
+  // === Kubernetes Prompts ===
+  {
+    name: 'k8s-debug-pod',
+    description: 'Debug a Kubernetes pod issue',
+    arguments: [
+      { name: 'pod_name', description: 'Name of the pod', required: true },
+      { name: 'namespace', description: 'Kubernetes namespace', required: false }
+    ]
+  },
+
+  // === Log Analysis Prompts ===
+  {
+    name: 'log-analyze',
+    description: 'Analyze logs for patterns and issues',
+    arguments: [
+      { name: 'source', description: 'Log source: file path, container name, or service', required: true },
+      { name: 'pattern', description: 'Pattern to search for', required: false }
+    ]
+  },
+
+  // === Workflow Prompts ===
+  {
+    name: 'dev-cycle',
+    description: 'Execute a full development cycle: test, lint, commit, push',
+    arguments: [
+      { name: 'message', description: 'Commit message', required: true },
+      { name: 'skip_tests', description: 'Skip tests (true/false)', required: false }
+    ]
+  },
+  {
+    name: 'deployment-checklist',
+    description: 'Generate a deployment checklist for the current project',
+    arguments: [
+      { name: 'environment', description: 'Target environment: dev, staging, production', required: true }
+    ]
+  },
+
+  // === Sequential Thinking Prompts ===
+  {
+    name: 'analyze-problem',
+    description: 'Use sequential thinking to analyze a complex problem',
+    arguments: [
+      { name: 'problem', description: 'Problem statement', required: true },
+      { name: 'context', description: 'Additional context', required: false }
+    ]
+  }
 ];
 
 // ========== Tool Handlers ==========
@@ -3563,19 +3830,478 @@ async function handleGenTool(name: string, args: Record<string, unknown>): Promi
   return { error: `Unknown gen tool: ${name}` };
 }
 
+// ========== Resource Handler ==========
+async function handleResource(uri: string): Promise<string> {
+  // Git Resources
+  if (uri === 'miyabi://git/status') {
+    const status = await git.status();
+    return JSON.stringify(status, null, 2);
+  }
+  if (uri === 'miyabi://git/branches') {
+    const branches = await git.branch(['-a', '-v']);
+    return JSON.stringify(branches, null, 2);
+  }
+  if (uri === 'miyabi://git/recent-commits') {
+    const log = await git.log({ maxCount: 10 });
+    return JSON.stringify(log, null, 2);
+  }
+  if (uri === 'miyabi://git/remotes') {
+    const remotes = await git.getRemotes(true);
+    return JSON.stringify(remotes, null, 2);
+  }
+
+  // System Resources
+  if (uri === 'miyabi://system/info') {
+    const [cpu, mem, disk, osInfo] = await Promise.all([
+      si.cpu(), si.mem(), si.fsSize(), si.osInfo()
+    ]);
+    return JSON.stringify({ cpu, memory: mem, disk, os: osInfo }, null, 2);
+  }
+  if (uri === 'miyabi://system/processes') {
+    const procs = await si.processes();
+    const top = procs.list.slice(0, 20);
+    return JSON.stringify({ count: procs.all, top }, null, 2);
+  }
+  if (uri === 'miyabi://system/network') {
+    const [interfaces, stats] = await Promise.all([
+      si.networkInterfaces(), si.networkStats()
+    ]);
+    return JSON.stringify({ interfaces, stats }, null, 2);
+  }
+
+  // Docker Resources
+  if (uri === 'miyabi://docker/containers') {
+    try {
+      const { stdout } = await execAsync('docker ps -a --format "{{json .}}"');
+      const containers = stdout.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      return JSON.stringify(containers, null, 2);
+    } catch (e) {
+      return JSON.stringify({ error: 'Docker not available or not running' });
+    }
+  }
+  if (uri === 'miyabi://docker/images') {
+    try {
+      const { stdout } = await execAsync('docker images --format "{{json .}}"');
+      const images = stdout.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      return JSON.stringify(images, null, 2);
+    } catch (e) {
+      return JSON.stringify({ error: 'Docker not available' });
+    }
+  }
+  if (uri === 'miyabi://docker/compose') {
+    try {
+      const { stdout } = await execAsync('docker compose ps --format json 2>/dev/null || docker-compose ps --format json');
+      return stdout || JSON.stringify({ status: 'No compose project found' });
+    } catch (e) {
+      return JSON.stringify({ error: 'Docker Compose not available' });
+    }
+  }
+
+  // GitHub Resources
+  if (uri === 'miyabi://github/issues') {
+    if (!octokit) return JSON.stringify({ error: 'GitHub token not configured' });
+    if (!GITHUB_DEFAULT_OWNER || !GITHUB_DEFAULT_REPO) return JSON.stringify({ error: 'GitHub defaults not configured' });
+    try {
+      const { data } = await octokit.issues.listForRepo({ owner: GITHUB_DEFAULT_OWNER, repo: GITHUB_DEFAULT_REPO, state: 'open', per_page: 20 });
+      return JSON.stringify(data.map(i => ({ number: i.number, title: i.title, state: i.state, labels: i.labels })), null, 2);
+    } catch (e) {
+      return JSON.stringify({ error: 'GitHub API error or no token' });
+    }
+  }
+  if (uri === 'miyabi://github/pulls') {
+    if (!octokit) return JSON.stringify({ error: 'GitHub token not configured' });
+    if (!GITHUB_DEFAULT_OWNER || !GITHUB_DEFAULT_REPO) return JSON.stringify({ error: 'GitHub defaults not configured' });
+    try {
+      const { data } = await octokit.pulls.list({ owner: GITHUB_DEFAULT_OWNER, repo: GITHUB_DEFAULT_REPO, state: 'open', per_page: 20 });
+      return JSON.stringify(data.map(p => ({ number: p.number, title: p.title, state: p.state, draft: p.draft })), null, 2);
+    } catch (e) {
+      return JSON.stringify({ error: 'GitHub API error' });
+    }
+  }
+  if (uri === 'miyabi://github/workflows') {
+    if (!octokit) return JSON.stringify({ error: 'GitHub token not configured' });
+    if (!GITHUB_DEFAULT_OWNER || !GITHUB_DEFAULT_REPO) return JSON.stringify({ error: 'GitHub defaults not configured' });
+    try {
+      const { data } = await octokit.actions.listRepoWorkflows({ owner: GITHUB_DEFAULT_OWNER, repo: GITHUB_DEFAULT_REPO });
+      return JSON.stringify(data.workflows.map(w => ({ name: w.name, state: w.state, path: w.path })), null, 2);
+    } catch (e) {
+      return JSON.stringify({ error: 'GitHub API error' });
+    }
+  }
+
+  // Tmux Resources
+  if (uri === 'miyabi://tmux/sessions') {
+    try {
+      const { stdout } = await execAsync('tmux list-sessions -F "#{session_name}:#{session_windows}:#{session_attached}"');
+      const sessions = stdout.trim().split('\n').filter(Boolean).map(line => {
+        const [name, windows, attached] = line.split(':');
+        return { name, windows: parseInt(windows), attached: attached === '1' };
+      });
+      return JSON.stringify(sessions, null, 2);
+    } catch (e) {
+      return JSON.stringify({ sessions: [], message: 'No tmux sessions or tmux not available' });
+    }
+  }
+
+  // Kubernetes Resources
+  if (uri === 'miyabi://k8s/pods') {
+    try {
+      const { stdout } = await execAsync('kubectl get pods -o json');
+      return stdout;
+    } catch (e) {
+      return JSON.stringify({ error: 'kubectl not available or not configured' });
+    }
+  }
+  if (uri === 'miyabi://k8s/services') {
+    try {
+      const { stdout } = await execAsync('kubectl get services -o json');
+      return stdout;
+    } catch (e) {
+      return JSON.stringify({ error: 'kubectl not available' });
+    }
+  }
+
+  // Tool Catalog
+  if (uri === 'miyabi://catalog/tools') {
+    const catalog: Record<string, string[]> = {};
+    for (const tool of tools) {
+      const category = tool.name.split('_')[0];
+      if (!catalog[category]) catalog[category] = [];
+      catalog[category].push(tool.name);
+    }
+    return JSON.stringify(catalog, null, 2);
+  }
+  if (uri === 'miyabi://catalog/categories') {
+    const categories: Record<string, { count: number; description: string }> = {
+      git: { count: 0, description: 'Git version control operations' },
+      tmux: { count: 0, description: 'Terminal multiplexer management' },
+      log: { count: 0, description: 'Log file analysis and monitoring' },
+      resource: { count: 0, description: 'System resource monitoring' },
+      network: { count: 0, description: 'Network connectivity and diagnostics' },
+      process: { count: 0, description: 'Process management' },
+      file: { count: 0, description: 'File operations' },
+      github: { count: 0, description: 'GitHub API integration' },
+      docker: { count: 0, description: 'Docker container management' },
+      compose: { count: 0, description: 'Docker Compose operations' },
+      k8s: { count: 0, description: 'Kubernetes cluster management' },
+      db: { count: 0, description: 'Database operations' },
+      think: { count: 0, description: 'Sequential thinking tools' },
+      gen: { count: 0, description: 'Generator utilities' },
+      calc: { count: 0, description: 'Math and statistics' }
+    };
+    for (const tool of tools) {
+      const category = tool.name.split('_')[0];
+      if (categories[category]) categories[category].count++;
+    }
+    return JSON.stringify(categories, null, 2);
+  }
+
+  return JSON.stringify({ error: `Unknown resource: ${uri}` });
+}
+
+// ========== Prompt Handler ==========
+function handlePrompt(name: string, args: Record<string, string>): { messages: Array<{ role: string; content: { type: string; text: string } }> } {
+  const messages: Array<{ role: string; content: { type: string; text: string } }> = [];
+
+  // Git Prompts
+  if (name === 'git-commit') {
+    const scope = args.scope ? `(${args.scope})` : '';
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create a git commit with the following:
+Type: ${args.type}
+Scope: ${scope || 'none'}
+Description: ${args.description}
+
+Please:
+1. Use git_status to check current changes
+2. Use git_staged_diff to review staged changes
+3. Create a conventional commit message in format: ${args.type}${scope}: ${args.description}
+4. Use git_commit_create to commit the changes`
+      }
+    });
+  }
+  else if (name === 'git-review') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Review the current git changes with focus on: ${args.focus || 'all aspects'}
+
+Please:
+1. Use git_diff to see unstaged changes
+2. Use git_staged_diff to see staged changes
+3. Analyze for: ${args.focus === 'security' ? 'security vulnerabilities, exposed secrets, unsafe operations' :
+          args.focus === 'performance' ? 'performance issues, inefficient code patterns' :
+          args.focus === 'style' ? 'code style, formatting, naming conventions' :
+          'security, performance, style, and best practices'}
+4. Provide specific recommendations for improvements`
+      }
+    });
+  }
+  else if (name === 'git-branch-strategy') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Suggest a branch strategy for: ${args.feature}
+
+Please:
+1. Use git_branch_list to see existing branches
+2. Recommend a branch name following conventional patterns (feat/, fix/, chore/, etc.)
+3. Suggest the base branch to branch from
+4. Outline the merge strategy`
+      }
+    });
+  }
+
+  // Docker Prompts
+  else if (name === 'docker-debug') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Debug Docker container: ${args.container}
+Issue: ${args.issue || 'General troubleshooting'}
+
+Please:
+1. Use docker_ps to check container status
+2. Use docker_logs with container="${args.container}" to view logs
+3. Use docker_inspect to check container configuration
+4. Analyze the issue and provide solutions`
+      }
+    });
+  }
+  else if (name === 'docker-compose-setup') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Help set up Docker Compose for services: ${args.services}
+
+Please:
+1. Suggest a docker-compose.yml structure
+2. Define service configurations for each: ${args.services}
+3. Set up networking between services
+4. Configure volumes and environment variables`
+      }
+    });
+  }
+
+  // GitHub Prompts
+  else if (name === 'github-issue-create') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Create a GitHub issue:
+Type: ${args.type}
+Title: ${args.title}
+Description: ${args.description}
+
+Please:
+1. Format the issue body with proper markdown
+2. Suggest appropriate labels for a ${args.type} issue
+3. Use github_issue_create to create the issue
+4. Include reproduction steps if it's a bug report`
+      }
+    });
+  }
+  else if (name === 'github-pr-review') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Review GitHub PR #${args.pr_number}
+Focus: ${args.focus || 'comprehensive review'}
+
+Please:
+1. Use github_pr_get to fetch PR details
+2. Use github_pr_files to list changed files
+3. Analyze changes for: ${args.focus === 'code' ? 'code quality, logic errors, best practices' :
+          args.focus === 'tests' ? 'test coverage, test quality, edge cases' :
+          args.focus === 'docs' ? 'documentation accuracy, completeness, clarity' :
+          args.focus === 'security' ? 'security vulnerabilities, unsafe patterns' :
+          'code quality, tests, docs, and security'}
+4. Provide specific feedback and suggestions`
+      }
+    });
+  }
+
+  // System Prompts
+  else if (name === 'system-health-check') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Perform system health check with focus: ${args.focus || 'all'}
+
+Please:
+1. Use resource_cpu for CPU utilization
+2. Use resource_memory for memory status
+3. Use resource_disk for disk usage
+4. Use resource_network for network status
+5. Identify any concerning metrics and suggest optimizations`
+      }
+    });
+  }
+  else if (name === 'process-troubleshoot') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Troubleshoot process: ${args.process_name}
+
+Please:
+1. Use process_find with name="${args.process_name}" to locate the process
+2. Check CPU and memory usage
+3. Use process_ports to check network connections
+4. Analyze and suggest solutions for any issues`
+      }
+    });
+  }
+
+  // Network Prompts
+  else if (name === 'network-diagnose') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Diagnose network connectivity${args.target ? ` to ${args.target}` : ''}
+
+Please:
+1. Use network_interfaces to check interface status
+2. ${args.target ? `Use network_ping to test connectivity to ${args.target}` : 'Check general connectivity'}
+3. Use network_dns_lookup if DNS issues suspected
+4. Analyze results and suggest fixes`
+      }
+    });
+  }
+
+  // Kubernetes Prompts
+  else if (name === 'k8s-debug-pod') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Debug Kubernetes pod: ${args.pod_name}${args.namespace ? ` in namespace ${args.namespace}` : ''}
+
+Please:
+1. Use k8s_pods to check pod status
+2. Use k8s_pod_logs to view pod logs
+3. Use k8s_pod_describe for detailed pod information
+4. Analyze events and conditions
+5. Suggest remediation steps`
+      }
+    });
+  }
+
+  // Log Analysis
+  else if (name === 'log-analyze') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Analyze logs from: ${args.source}
+Pattern to find: ${args.pattern || 'errors and warnings'}
+
+Please:
+1. Use appropriate log tool to read logs
+2. Search for patterns: ${args.pattern || 'ERROR, WARN, Exception, Failed'}
+3. Identify frequency and patterns
+4. Suggest root causes and solutions`
+      }
+    });
+  }
+
+  // Workflow Prompts
+  else if (name === 'dev-cycle') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Execute development cycle with commit message: ${args.message}
+Skip tests: ${args.skip_tests || 'false'}
+
+Please:
+1. ${args.skip_tests === 'true' ? 'Skip tests' : 'Run tests first'}
+2. Use git_status to check changes
+3. Stage and commit with message: ${args.message}
+4. Push to remote branch`
+      }
+    });
+  }
+  else if (name === 'deployment-checklist') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Generate deployment checklist for: ${args.environment}
+
+Please create a checklist including:
+1. Pre-deployment checks (tests, build, dependencies)
+2. ${args.environment === 'production' ? 'Production-specific: backup, maintenance window, rollback plan' :
+          args.environment === 'staging' ? 'Staging-specific: test data, integration tests' :
+          'Development-specific: local environment setup'}
+3. Deployment steps
+4. Post-deployment verification
+5. Monitoring and alerting checks`
+      }
+    });
+  }
+
+  // Sequential Thinking
+  else if (name === 'analyze-problem') {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Analyze problem using sequential thinking: ${args.problem}
+${args.context ? `Context: ${args.context}` : ''}
+
+Please use the thinking tools:
+1. think_step with type="observation" to gather facts
+2. think_step with type="hypothesis" to form theories
+3. think_step with type="analysis" to evaluate each hypothesis
+4. think_branch if alternative approaches needed
+5. think_step with type="conclusion" for final recommendation
+6. think_summarize to provide summary`
+      }
+    });
+  }
+
+  // Default fallback
+  else {
+    messages.push({
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `Unknown prompt: ${name}. Available prompts: git-commit, git-review, git-branch-strategy, docker-debug, docker-compose-setup, github-issue-create, github-pr-review, system-health-check, process-troubleshoot, network-diagnose, k8s-debug-pod, log-analyze, dev-cycle, deployment-checklist, analyze-problem`
+      }
+    });
+  }
+
+  return { messages };
+}
+
 // ========== Main Server ==========
 const server = new Server(
   {
     name: 'miyabi-mcp-bundle',
-    version: '3.6.0',
+    version: '3.7.0',
   },
   {
     capabilities: {
       tools: {},
+      resources: {},
+      prompts: {},
     },
   }
 );
 
+// Tool handlers
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools };
 });
@@ -3594,14 +4320,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   };
 });
 
+// Resource handlers
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return { resources };
+});
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const { uri } = request.params;
+  const content = await handleResource(uri);
+
+  return {
+    contents: [
+      {
+        uri,
+        mimeType: 'application/json',
+        text: content,
+      },
+    ],
+  };
+});
+
+// Prompt handlers
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+  return { prompts };
+});
+
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+  return handlePrompt(name, args as Record<string, string> || {});
+});
+
 async function main() {
   console.error('');
   console.error('┌────────────────────────────────────────────────┐');
-  console.error('│  🌸 Miyabi MCP Bundle v3.6.0                   │');
+  console.error('│  🌸 Miyabi MCP Bundle v3.7.0                   │');
   console.error('│  The Most Comprehensive MCP Server             │');
   console.error('├────────────────────────────────────────────────┤');
   console.error(`│  📂 Repository: ${MIYABI_REPO_PATH.slice(0, 28).padEnd(28)} │`);
   console.error(`│  🔧 Tools: ${String(tools.length).padEnd(35)} │`);
+  console.error(`│  📦 Resources: ${String(resources.length).padEnd(31)} │`);
+  console.error(`│  💬 Prompts: ${String(prompts.length).padEnd(33)} │`);
   console.error(`│  🔐 Security: Enterprise-grade                 │`);
   console.error('└────────────────────────────────────────────────┘');
   console.error('');

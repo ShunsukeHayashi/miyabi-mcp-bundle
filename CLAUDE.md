@@ -4,10 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **172 tools** across 21 categories for Claude Desktop and AI agents. The entire implementation lives in a single `src/index.ts` file (~3500 lines).
+Miyabi MCP Bundle is an All-in-One MCP (Model Context Protocol) server providing **172 tools**, **18 resources**, **15 prompts**, and **9 skills** for Claude Desktop and AI agents.
 
-### Key Features (v3.6.0)
+### Key Features (v3.7.0)
 - **172 MCP Tools** across 21 categories
+- **18 MCP Resources** for data access (miyabi:// URIs)
+- **15 MCP Prompts** for guided workflows
+- **9 Agent Skills** following progressive disclosure pattern
 - **Enterprise-grade Security**: Input sanitization, path traversal protection, symlink attack prevention
 - **Intelligent Caching**: Built-in LRU cache with TTL support
 - **Health Check System**: Comprehensive system validation
@@ -135,3 +138,39 @@ try {
 - Strict mode enabled with all strict checks
 - Source maps and declaration files generated
 - Output to `dist/` directory
+
+## Agent Skills (v3.7.0)
+
+Skills follow progressive disclosure pattern - load metadata first, full content only when activated.
+
+### Skill Index
+
+See `.claude/overview.md` for complete skill catalog.
+
+| Skill | Tools | Triggers |
+|-------|-------|----------|
+| `git-operations` | 19 | git status, branches, commit |
+| `github-integration` | 21 | issues, PRs, CI |
+| `docker-management` | 14 | containers, logs, compose |
+| `system-monitoring` | 10 | health check, CPU, memory |
+| `network-diagnostics` | 15 | ping, DNS, ports |
+| `kubernetes-operations` | 6 | pods, services, logs |
+| `log-analysis` | 7 | read logs, find errors |
+| `process-management` | 24 | processes, tmux |
+| `sequential-thinking` | 3 | analyze, reason |
+
+### Skill Structure
+
+```
+.claude/skills/[skill-name]/
+├── SKILL.md              # Main skill definition
+└── resources/            # Optional reference docs
+```
+
+### Usage Pattern
+
+```
+1. User triggers skill → Load SKILL.md
+2. Follow skill workflow → Use wrapped MCP tools
+3. Complete task → Return results
+```
