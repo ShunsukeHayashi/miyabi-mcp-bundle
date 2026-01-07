@@ -49,13 +49,19 @@ import { Octokit } from '@octokit/rest';
 import * as si from 'systeminformation';
 import { glob } from 'glob';
 import { readFile, readdir, stat } from 'fs/promises';
-import { realpathSync, existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { homedir, platform } from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import * as dns from 'dns';
+
+// Utilities (consolidated from utils/)
+import { sanitizeShellArg, sanitizePath, isValidHostname, isValidPid, validateInputLength } from './utils/security.js';
+import { clampRange, parseLines } from './utils/validation.js';
+import { MAX_QUERY_LENGTH, MAX_PATH_LENGTH, MAX_HOSTNAME_LENGTH, GIT_LOG_MAX, GIT_LOG_DEFAULT, GIT_CONTRIBUTORS_MAX, GIT_CONTRIBUTORS_DEFAULT } from './constants.js';
+
 // Society Health Check Pro (Issue #16)
 import { handleSocietyHealthAll, handleSocietyHealthSingle, handleSocietyAgentStatus, handleSocietyMcpStatus, handleSocietyMetricsSummary } from './handlers/society-health.js';
 // Metrics, Bridge, Context (Issues #17, #18, #13)
@@ -68,54 +74,7 @@ const dnsLookup = promisify(dns.lookup);
 const dnsResolve4 = promisify(dns.resolve4);
 const dnsResolve6 = promisify(dns.resolve6);
 
-// ========== Security Helpers ==========
-
-// Input size limits to prevent DoS attacks
-const MAX_QUERY_LENGTH = 1000;
-const MAX_PATH_LENGTH = 4096;
-const MAX_HOSTNAME_LENGTH = 253;
-
-/**
- * Validate input string length
- */
-function validateInputLength(value: string, maxLength: number, fieldName: string): string | null {
-  if (value && value.length > maxLength) {
-    return `${fieldName} exceeds maximum length of ${maxLength} characters`;
-  }
-  return null;
-}
-
-/**
- * Sanitize shell argument to prevent command injection
- */
-function sanitizeShellArg(arg: string): string {
-  if (!arg) return '';
-  return arg.replace(/[;&|`$(){}[\]<>\\!#*?~\n\r]/g, '');
-}
-
-/**
- * Validate and sanitize path to prevent traversal and symlink attacks
- */
-function sanitizePath(basePath: string, userPath: string): string {
-  const resolved = resolve(basePath, userPath);
-  const normalizedBase = resolve(basePath);
-  if (!resolved.startsWith(normalizedBase)) {
-    throw new Error('Path traversal detected');
-  }
-  // Symlink attack protection: resolve real path if file exists
-  if (existsSync(resolved)) {
-    const realPath = realpathSync(resolved);
-    if (!realPath.startsWith(normalizedBase)) {
-      throw new Error('Symlink traversal detected');
-    }
-    return realPath;
-  }
-  return resolved;
-}
-
-/**
- * Check if command exists on the system
- */
+// commandExists wrapper for this module
 async function commandExists(cmd: string): Promise<boolean> {
   try {
     const which = platform() === 'win32' ? 'where' : 'which';
@@ -124,21 +83,6 @@ async function commandExists(cmd: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/**
- * Validate hostname format
- */
-function isValidHostname(hostname: string): boolean {
-  if (!hostname || hostname.length > 253) return false;
-  return /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(hostname);
-}
-
-/**
- * Validate PID
- */
-function isValidPid(pid: unknown): pid is number {
-  return typeof pid === 'number' && Number.isInteger(pid) && pid > 0 && pid < 4194304;
 }
 
 // ========== Caching System ==========
@@ -717,7 +661,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
       return { branch: branch.trim() };
     }
     if (name === 'git_log') {
-      const limit = Math.min(Math.max((args.limit as number) || 20, 1), 100);
+      const limit = clampRange(args.limit, 1, GIT_LOG_MAX, GIT_LOG_DEFAULT);
       return await git.log({ maxCount: limit });
     }
     if (name === 'git_worktree_list') {
@@ -747,7 +691,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     }
     if (name === 'git_file_history') {
       const file = sanitizeShellArg(args.file as string);
-      const limit = Math.min(Math.max((args.limit as number) || 10, 1), 50);
+      const limit = clampRange(args.limit, 1, 50, 10);
       return await git.log({ file, maxCount: limit });
     }
     if (name === 'git_stash_list') {
@@ -775,14 +719,14 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
       return { tags: tags.all };
     }
     if (name === 'git_contributors') {
-      const limit = Math.min(Math.max((args.limit as number) || 10, 1), 50);
+      const limit = clampRange(args.limit, 1, GIT_CONTRIBUTORS_MAX, GIT_CONTRIBUTORS_DEFAULT);
       const { stdout } = await execAsync(`git shortlog -sn --no-merges HEAD | head -${limit}`, { cwd: MIYABI_REPO_PATH });
-      return { contributors: stdout.trim().split('\n').filter(Boolean) };
+      return { contributors: parseLines(stdout) };
     }
     if (name === 'git_conflicts') {
       try {
         const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: MIYABI_REPO_PATH });
-        const conflicts = stdout.trim().split('\n').filter(Boolean);
+        const conflicts = parseLines(stdout);
         return { hasConflicts: conflicts.length > 0, files: conflicts };
       } catch {
         return { hasConflicts: false, files: [] };

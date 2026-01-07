@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "miyabi-mcp-bundle": {
+      "command": "node",
+      "args": ["/Users/shunsukehayashi/dev/miyabi-mcp-bundle/dist/index.js"],
+      "env": {
+        "MIYABI_REPO_PATH": "/Users/shunsukehayashi/dev",
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
