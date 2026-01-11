@@ -32,35 +32,31 @@ npm start        # Run compiled dist/index.js
 
 ## Architecture
 
-### Single-File Implementation
+### Hybrid Implementation (Transitioning from Monolith)
 
-All tool definitions and handlers are in `src/index.ts`:
+The codebase is currently in a hybrid state, transitioning from a single-file monolith to a modular architecture.
+
+1. **Core & Legacy (`src/index.ts`)**:
+   - Environment configuration & server setup
+   - Main tool routing `handleTool()`
+   - Legacy handlers: Git, Tmux, Log, Resource, Network, etc.
+
+2. **Modern Modules (`src/handlers/`)**:
+   - Newer features are modularized in dedicated files:
+   - `handlers/society-health.ts`
+   - `handlers/metrics.ts`
+   - `handlers/bridge.ts`
+   - `handlers/context.ts`
 
 ```
-src/index.ts
-├── Environment Configuration (lines 40-59)
-├── Tool Definitions Array (lines 66-159)
-├── Main Handler: handleTool() (lines 162-256)
-│   └── Routes to category-specific handlers by prefix
-├── Category Handlers:
-│   ├── handleTmuxTool()     (tmux_*)
-│   ├── handleLogTool()      (log_*)
-│   ├── handleResourceTool() (resource_*)
-│   ├── handleNetworkTool()  (network_*)
-│   ├── handleProcessTool()  (process_*)
-│   ├── handleFileTool()     (file_*)
-│   ├── handleClaudeTool()   (claude_*)
-│   ├── handleGitHubTool()   (github_*)
-│   ├── handleDockerTool()   (docker_*, compose_*)
-│   ├── handleK8sTool()      (k8s_*)
-│   ├── handleSpeckitTool()  (speckit_*)
-│   ├── handleMcpTool()      (mcp_*)
-│   ├── handleDbTool()       (db_*)
-│   ├── handleTimeTool()     (time_*)
-│   ├── handleCalcTool()     (calc_*)
-│   ├── handleThinkTool()    (think_*)
-│   └── handleGenTool()      (gen_*)
-└── MCP Server Setup
+src/
+├── index.ts              # Entry point & Legacy Handlers
+├── handlers/             # Modern Modular Handlers
+│   ├── society-health.ts
+│   ├── metrics.ts
+│   ├── bridge.ts
+│   └── context.ts
+└── utils/                # Shared Utilities
 ```
 
 ### Tool Naming Convention

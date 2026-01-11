@@ -2,7 +2,7 @@
 /**
  * Miyabi MCP Bundle - All-in-One Monitoring and Control Server
  *
- * A comprehensive MCP server with 172 tools across 21 categories:
+ * A comprehensive MCP server with 176 tools across 22 categories:
  * - Git Inspector (19 tools)
  * - Tmux Monitor (10 tools)
  * - Log Aggregator (7 tools)
@@ -24,9 +24,10 @@
  * - Calculator Tools (3 tools) - Math, units, statistics
  * - Sequential Thinking (3 tools) - Structured reasoning
  * - Generator Tools (4 tools) - UUID, random, hash, password
+ * - Pushcut (4 tools) - iPhone push notifications
  * + System Health (1 tool)
  *
- * @version 3.6.0
+ * @version 3.7.0
  * @author Shunsuke Hayashi
  * @license MIT
  */
@@ -59,8 +60,8 @@ import * as dns from 'dns';
 
 // Utilities (consolidated from utils/)
 import { sanitizeShellArg, sanitizePath, isValidHostname, isValidPid, validateInputLength } from './utils/security.js';
-import { clampRange, parseLines } from './utils/validation.js';
-import { MAX_QUERY_LENGTH, MAX_PATH_LENGTH, MAX_HOSTNAME_LENGTH, GIT_LOG_MAX, GIT_LOG_DEFAULT, GIT_CONTRIBUTORS_MAX, GIT_CONTRIBUTORS_DEFAULT } from './constants.js';
+
+import { MAX_QUERY_LENGTH, MAX_PATH_LENGTH, MAX_HOSTNAME_LENGTH } from './constants.js';
 
 // Society Health Check Pro (Issue #16)
 import { handleSocietyHealthAll, handleSocietyHealthSingle, handleSocietyAgentStatus, handleSocietyMcpStatus, handleSocietyMetricsSummary } from './handlers/society-health.js';
@@ -68,6 +69,13 @@ import { handleSocietyHealthAll, handleSocietyHealthSingle, handleSocietyAgentSt
 import { handleMetricsCollect, handleMetricsAggregate, handleMetricsQuery, handleMetricsExport, handleMetricsDashboard } from './handlers/metrics.js';
 import { handleBridgeSend, handleBridgeReceive, handleBridgeContextShare, handleBridgeContextGet, handleBridgeQueueStatus, handleBridgeHistory } from './handlers/bridge.js';
 import { handleContextStore, handleContextGet, handleContextList, handleContextExpire, handleContextShare, handleContextSearch } from './handlers/context.js';
+import { gitTools, handleGitTool } from './handlers/git.js';
+import { tmuxTools, handleTmuxTool } from './handlers/tmux.js';
+import { networkTools, handleNetworkTool } from './handlers/network.js';
+import { logTools, handleLogTool } from './handlers/log.js';
+import { resourceTools, handleResourceTool } from './handlers/resource.js';
+import { processTools, handleProcessTool } from './handlers/process.js';
+import { fileTools, handleFileTool } from './handlers/file.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -85,36 +93,7 @@ async function commandExists(cmd: string): Promise<boolean> {
   }
 }
 
-// ========== Caching System ==========
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-  ttl: number;
-}
-
-class SimpleCache {
-  private cache = new Map<string, CacheEntry<unknown>>();
-
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    if (Date.now() - entry.timestamp > entry.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-    return entry.data as T;
-  }
-
-  set<T>(key: string, data: T, ttlMs: number = 5000): void {
-    this.cache.set(key, { data, timestamp: Date.now(), ttl: ttlMs });
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-}
-
-const cache = new SimpleCache();
+import { sharedCache as cache } from './utils/shared-cache.js';
 
 // ========== Environment Configuration ==========
 const MIYABI_REPO_PATH = process.env.MIYABI_REPO_PATH || process.cwd();
@@ -136,6 +115,10 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const GITHUB_DEFAULT_OWNER = process.env.GITHUB_DEFAULT_OWNER || '';
 const GITHUB_DEFAULT_REPO = process.env.GITHUB_DEFAULT_REPO || '';
 
+// Pushcut Configuration
+const PUSHCUT_API_KEY = process.env.PUSHCUT_API_KEY || '_-HbYtD2bXsDDAMjKqbrY';
+const PUSHCUT_DEFAULT_NOTIFICATION = process.env.PUSHCUT_DEFAULT_NOTIFICATION || 'Teachable 購入通知';
+
 // ========== Initialize Clients ==========
 const git: SimpleGit = simpleGit(MIYABI_REPO_PATH);
 const octokit = GITHUB_TOKEN ? new Octokit({ auth: GITHUB_TOKEN }) : null;
@@ -143,37 +126,9 @@ const octokit = GITHUB_TOKEN ? new Octokit({ auth: GITHUB_TOKEN }) : null;
 // ========== Tool Definitions ==========
 const tools: Tool[] = [
   // === Git Inspector (19 tools) ===
-  { name: 'git_status', description: 'Get working tree status showing modified, staged, and untracked files. Use before committing to review changes.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_branch_list', description: 'List all local and remote branches with tracking info. Shows which branches are ahead/behind remotes.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_current_branch', description: 'Get the name of the currently checked out branch. Useful for automation scripts.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_log', description: 'Get commit history with author, date, and message. Use limit to control results (default: 20).', inputSchema: { type: 'object', properties: { limit: { type: 'number', description: 'Number of commits (default: 20)' } } } },
-  { name: 'git_worktree_list', description: 'List all git worktrees for parallel development. Shows path and branch for each worktree.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_diff', description: 'Show unstaged changes in working directory. Optionally specify a file to see changes for only that file.', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'Specific file to diff' } } } },
-  { name: 'git_staged_diff', description: 'Show changes staged for commit (git diff --cached). Review before committing.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_remote_list', description: 'List configured remotes with their fetch/push URLs. Check remote configuration.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_branch_ahead_behind', description: 'Check how many commits a branch is ahead/behind its upstream. Useful before push/pull.', inputSchema: { type: 'object', properties: { branch: { type: 'string', description: 'Branch name (default: current branch)' } } } },
-  { name: 'git_file_history', description: 'Get commit history for a specific file. Track when and why a file was modified (default: 10 commits).', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'File path to get history for' }, limit: { type: 'number', description: 'Number of commits (default: 10)' } }, required: ['file'] } },
-  { name: 'git_stash_list', description: 'List all stashed changes with their descriptions. Find saved work to restore later.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_blame', description: 'Show who last modified each line of a file. Optional line range to focus on specific code.', inputSchema: { type: 'object', properties: { file: { type: 'string', description: 'File path to get blame for' }, startLine: { type: 'number', description: 'Starting line number (1-indexed)' }, endLine: { type: 'number', description: 'Ending line number (1-indexed)' } }, required: ['file'] } },
-  { name: 'git_show', description: 'Show details of a commit including diff and metadata. Defaults to HEAD if no commit specified.', inputSchema: { type: 'object', properties: { commit: { type: 'string', description: 'Commit hash (default: HEAD)' } } } },
-  { name: 'git_tag_list', description: 'List all tags with their associated commits. Useful for finding release versions.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_contributors', description: 'List contributors ranked by commit count. Identify active maintainers and authors.', inputSchema: { type: 'object', properties: { limit: { type: 'number', description: 'Max contributors to return' } } } },
-  { name: 'git_conflicts', description: 'Detect files with merge conflicts in working tree. Use during merge/rebase to find issues.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_submodule_status', description: 'Show status of all submodules including commit hash and sync state.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_lfs_status', description: 'Get Git LFS tracked files and status. Requires git-lfs to be installed.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'git_hooks_list', description: 'List git hooks in .git/hooks directory. Check which hooks are enabled.', inputSchema: { type: 'object', properties: {} } },
+  ...gitTools,
 
-  // === Tmux Monitor (10 tools) ===
-  { name: 'tmux_list_sessions', description: 'List all tmux sessions with window count and status. Discover active terminal sessions.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'tmux_list_windows', description: 'List windows in a tmux session. Shows window index, name, and active status.', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name (optional, lists all if omitted)' } } } },
-  { name: 'tmux_list_panes', description: 'List panes in tmux windows with their dimensions and commands.', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name (optional)' } } } },
-  { name: 'tmux_send_keys', description: 'Send keystrokes or text to a tmux pane. Use for automation or remote commands.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (e.g., session:window.pane or %id)' }, keys: { type: 'string', description: 'Keys/text to send' } }, required: ['target', 'keys'] } },
-  { name: 'tmux_pane_capture', description: 'Capture terminal output from a pane. Get scrollback history for debugging.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (e.g., session:window.pane or %id)' }, lines: { type: 'number', description: 'Number of lines to capture (default: all)' } } } },
-  { name: 'tmux_pane_search', description: 'Search pane content for a pattern. Find specific output in terminal history.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane (optional)' }, pattern: { type: 'string', description: 'Search pattern (substring match)' } }, required: ['pattern'] } },
-  { name: 'tmux_pane_tail', description: 'Get last N lines from pane output. Monitor recent command results.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' }, lines: { type: 'number', description: 'Number of lines to retrieve' } } } },
-  { name: 'tmux_pane_is_busy', description: 'Check if a pane is running a command. Useful for waiting on long operations.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' } } } },
-  { name: 'tmux_pane_current_command', description: 'Get the command currently running in a pane. Identify active processes.', inputSchema: { type: 'object', properties: { target: { type: 'string', description: 'Target pane' } } } },
-  { name: 'tmux_session_info', description: 'Get detailed tmux session info including creation time and attached clients.', inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'Session name' } }, required: ['session'] } },
+  ...tmuxTools,
 
   // === Log Aggregator (7 tools) ===
   { name: 'log_sources', description: 'List available log files in configured directory. Discover logs to analyze.', inputSchema: { type: 'object', properties: {} } },
@@ -197,21 +152,7 @@ const tools: Tool[] = [
   { name: 'resource_temperature', description: 'Get CPU and system temperatures. Monitor for thermal throttling.', inputSchema: { type: 'object', properties: {} } },
 
   // === Network Inspector (15 tools) ===
-  { name: 'network_interfaces', description: 'List network interfaces with IP addresses, MAC, and status. Check connectivity.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_connections', description: 'List active TCP/UDP connections with remote endpoints. Debug network issues.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_listening_ports', description: 'List ports your services are listening on. Find port conflicts.', inputSchema: { type: 'object', properties: { protocol: { type: 'string', enum: ['tcp', 'udp', 'all'], description: 'Filter by protocol (default: all)' } } } },
-  { name: 'network_stats', description: 'Get network I/O statistics: bytes, packets, errors, and drops per interface.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_gateway', description: 'Get default gateway IP and interface. Verify internet routing.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_ping', description: 'Ping a host to check connectivity and measure latency (default: 4 pings).', inputSchema: { type: 'object', properties: { host: { type: 'string', description: 'Hostname or IP address' }, count: { type: 'number', description: 'Number of pings (default: 4)' } }, required: ['host'] } },
-  { name: 'network_bandwidth', description: 'Get current network bandwidth usage in bytes/sec per interface.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_overview', description: 'Get complete network overview: interfaces, connections, ports, and gateway.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_dns_lookup', description: 'Resolve hostname to IP addresses (IPv4 and IPv6). Debug DNS issues.', inputSchema: { type: 'object', properties: { hostname: { type: 'string', description: 'Hostname to resolve' } }, required: ['hostname'] } },
-  { name: 'network_port_check', description: 'Check if a TCP port is open on a remote host. Test service availability.', inputSchema: { type: 'object', properties: { host: { type: 'string', description: 'Target host' }, port: { type: 'number', description: 'Port number to check' } }, required: ['host', 'port'] } },
-  { name: 'network_public_ip', description: 'Get your public IP address as seen from the internet.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_wifi_info', description: 'Get WiFi connection details: SSID, signal strength, channel (macOS/Linux).', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_route_table', description: 'Show IP routing table. Debug traffic routing and network paths.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'network_ssl_check', description: 'Check SSL/TLS certificate: expiry, issuer, validity. Monitor cert health.', inputSchema: { type: 'object', properties: { host: { type: 'string', description: 'Hostname to check' }, port: { type: 'number', description: 'Port (default: 443)' } }, required: ['host'] } },
-  { name: 'network_traceroute', description: 'Trace network path to a host. Diagnose routing and latency issues.', inputSchema: { type: 'object', properties: { host: { type: 'string', description: 'Target host' }, maxHops: { type: 'number', description: 'Max hops (default: 30)' } }, required: ['host'] } },
+  ...networkTools,
 
   // === Process Inspector (14 tools) ===
   { name: 'process_info', description: 'Get detailed info about a process by PID: CPU, memory, command, and status.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
@@ -383,6 +324,12 @@ const tools: Tool[] = [
   { name: 'gen_random', description: 'Generate random integers or floats within a range.', inputSchema: { type: 'object', properties: { min: { type: 'number', description: 'Minimum value (default: 0)' }, max: { type: 'number', description: 'Maximum value (default: 100)' }, count: { type: 'number', description: 'Number of values (max 1000)' }, type: { type: 'string', enum: ['integer', 'float'], description: 'Number type' } }, required: [] } },
   { name: 'gen_hash', description: 'Hash a string using MD5, SHA1, SHA256, or SHA512. Output in hex or base64.', inputSchema: { type: 'object', properties: { input: { type: 'string', description: 'String to hash' }, algorithm: { type: 'string', enum: ['md5', 'sha1', 'sha256', 'sha512'], description: 'Hash algorithm (default: sha256)' }, encoding: { type: 'string', enum: ['hex', 'base64'], description: 'Output encoding' } }, required: ['input'] } },
   { name: 'gen_password', description: 'Generate secure password with configurable character sets (default: 16 chars).', inputSchema: { type: 'object', properties: { length: { type: 'number', description: 'Password length (8-128, default: 16)' }, uppercase: { type: 'boolean', description: 'Include uppercase letters' }, lowercase: { type: 'boolean', description: 'Include lowercase letters' }, numbers: { type: 'boolean', description: 'Include numbers' }, symbols: { type: 'boolean', description: 'Include symbols' }, excludeSimilar: { type: 'boolean', description: 'Exclude similar characters (0O1lI)' } } } },
+
+  // === Pushcut Tools (4 tools) ===
+  { name: 'pushcut_notify', description: 'Send push notification to iPhone via Pushcut. Supports custom title, text, and action buttons.', inputSchema: { type: 'object', properties: { title: { type: 'string', description: 'Notification title' }, text: { type: 'string', description: 'Notification body text' }, notification: { type: 'string', description: 'Notification template name (default: configured template)' }, sound: { type: 'string', description: 'Sound name (optional)' }, image: { type: 'string', description: 'Image URL (optional)' } }, required: ['title', 'text'] } },
+  { name: 'pushcut_notify_actions', description: 'Send notification with action buttons (URL or Shortcut triggers).', inputSchema: { type: 'object', properties: { title: { type: 'string', description: 'Notification title' }, text: { type: 'string', description: 'Notification body text' }, notification: { type: 'string', description: 'Notification template name' }, actions: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, url: { type: 'string' }, shortcut: { type: 'string' }, input: { type: 'string' } } }, description: 'Action buttons array' } }, required: ['title', 'text', 'actions'] } },
+  { name: 'pushcut_execute', description: 'Execute iOS Shortcut via Pushcut Automation Server.', inputSchema: { type: 'object', properties: { shortcut: { type: 'string', description: 'Shortcut name to execute' }, input: { type: 'string', description: 'Input to pass to Shortcut' }, device: { type: 'string', description: 'Target device name (optional)' } }, required: ['shortcut'] } },
+  { name: 'pushcut_devices', description: 'List registered Pushcut devices.', inputSchema: { type: 'object', properties: {} } },
 ];
 
 // ========== Resources ==========
@@ -649,143 +596,11 @@ const prompts: Prompt[] = [
 // ========== Tool Handlers ==========
 async function handleTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   try {
-    // Git Inspector
-    if (name === 'git_status') {
-      return await git.status();
+    // Git Handler
+    if (name.startsWith('git_')) {
+      return await handleGitTool(name, args);
     }
-    if (name === 'git_branch_list') {
-      return await git.branch(['-a', '-v']);
-    }
-    if (name === 'git_current_branch') {
-      const branch = await git.revparse(['--abbrev-ref', 'HEAD']);
-      return { branch: branch.trim() };
-    }
-    if (name === 'git_log') {
-      const limit = clampRange(args.limit, 1, GIT_LOG_MAX, GIT_LOG_DEFAULT);
-      return await git.log({ maxCount: limit });
-    }
-    if (name === 'git_worktree_list') {
-      const { stdout } = await execAsync('git worktree list --porcelain', { cwd: MIYABI_REPO_PATH });
-      return { worktrees: stdout };
-    }
-    if (name === 'git_diff') {
-      const file = args.file as string | undefined;
-      const diff = file ? await git.diff([sanitizeShellArg(file)]) : await git.diff();
-      return { diff };
-    }
-    if (name === 'git_staged_diff') {
-      return { diff: await git.diff(['--staged']) };
-    }
-    if (name === 'git_remote_list') {
-      return { remotes: await git.getRemotes(true) };
-    }
-    if (name === 'git_branch_ahead_behind') {
-      const branch = sanitizeShellArg((args.branch as string) || 'HEAD');
-      try {
-        const { stdout } = await execAsync(`git rev-list --left-right --count origin/${branch}...${branch}`, { cwd: MIYABI_REPO_PATH });
-        const [behind, ahead] = stdout.trim().split('\t').map(Number);
-        return { ahead, behind };
-      } catch {
-        return { error: 'Could not determine ahead/behind count' };
-      }
-    }
-    if (name === 'git_file_history') {
-      const file = sanitizeShellArg(args.file as string);
-      const limit = clampRange(args.limit, 1, 50, 10);
-      return await git.log({ file, maxCount: limit });
-    }
-    if (name === 'git_stash_list') {
-      const stashList = await git.stashList();
-      return { stashes: stashList.all };
-    }
-    if (name === 'git_blame') {
-      const file = sanitizeShellArg(args.file as string);
-      const startLine = args.startLine as number | undefined;
-      const endLine = args.endLine as number | undefined;
-      let cmd = `git blame --line-porcelain "${file}"`;
-      if (startLine && endLine && startLine > 0 && endLine >= startLine) {
-        cmd = `git blame --line-porcelain -L ${startLine},${endLine} "${file}"`;
-      }
-      const { stdout } = await execAsync(cmd, { cwd: MIYABI_REPO_PATH });
-      return { blame: stdout };
-    }
-    if (name === 'git_show') {
-      const commit = sanitizeShellArg((args.commit as string) || 'HEAD');
-      const { stdout } = await execAsync(`git show --stat "${commit}"`, { cwd: MIYABI_REPO_PATH });
-      return { show: stdout };
-    }
-    if (name === 'git_tag_list') {
-      const tags = await git.tags();
-      return { tags: tags.all };
-    }
-    if (name === 'git_contributors') {
-      const limit = clampRange(args.limit, 1, GIT_CONTRIBUTORS_MAX, GIT_CONTRIBUTORS_DEFAULT);
-      const { stdout } = await execAsync(`git shortlog -sn --no-merges HEAD | head -${limit}`, { cwd: MIYABI_REPO_PATH });
-      return { contributors: parseLines(stdout) };
-    }
-    if (name === 'git_conflicts') {
-      try {
-        const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: MIYABI_REPO_PATH });
-        const conflicts = parseLines(stdout);
-        return { hasConflicts: conflicts.length > 0, files: conflicts };
-      } catch {
-        return { hasConflicts: false, files: [] };
-      }
-    }
-    if (name === 'git_submodule_status') {
-      try {
-        const { stdout } = await execAsync('git submodule status --recursive', { cwd: MIYABI_REPO_PATH });
-        const lines = stdout.trim().split('\n').filter(Boolean);
-        const submodules = lines.map(line => {
-          const match = line.match(/^([+-U ]?)([a-f0-9]+)\s+(\S+)(?:\s+\((.+)\))?/);
-          if (match) {
-            return {
-              status: match[1] === '+' ? 'modified' : match[1] === '-' ? 'uninitialized' : match[1] === 'U' ? 'conflict' : 'ok',
-              commit: match[2],
-              path: match[3],
-              describe: match[4] || null
-            };
-          }
-          return { raw: line };
-        });
-        return { submodules };
-      } catch {
-        return { submodules: [], message: 'No submodules or git submodule not available' };
-      }
-    }
-    if (name === 'git_lfs_status') {
-      const hasLfs = await commandExists('git-lfs');
-      if (!hasLfs) {
-        return { error: 'git-lfs is not installed', installed: false };
-      }
-      try {
-        const { stdout: statusOut } = await execAsync('git lfs status', { cwd: MIYABI_REPO_PATH });
-        const { stdout: envOut } = await execAsync('git lfs env', { cwd: MIYABI_REPO_PATH });
-        return { installed: true, status: statusOut.trim(), env: envOut.trim() };
-      } catch (error) {
-        return { installed: true, error: error instanceof Error ? error.message : String(error) };
-      }
-    }
-    if (name === 'git_hooks_list') {
-      const hooksDir = join(MIYABI_REPO_PATH, '.git', 'hooks');
-      try {
-        const files = await readdir(hooksDir);
-        const hooks = files
-          .filter(f => !f.endsWith('.sample'))
-          .map(async (f) => {
-            const hookPath = join(hooksDir, f);
-            const hookStat = await stat(hookPath);
-            return {
-              name: f,
-              executable: (hookStat.mode & 0o111) !== 0,
-              size: hookStat.size
-            };
-          });
-        return { hooks: await Promise.all(hooks) };
-      } catch {
-        return { hooks: [], message: 'No hooks directory or not a git repository' };
-      }
-    }
+
 
     // Category handlers
     if (name.startsWith('tmux_')) return await handleTmuxTool(name, args);
@@ -813,6 +628,7 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
     if (name.startsWith('calc_')) return await handleCalcTool(name, args);
     if (name.startsWith('think_')) return await handleThinkTool(name, args);
     if (name.startsWith('gen_')) return await handleGenTool(name, args);
+    if (name.startsWith('pushcut_')) return await handlePushcutTool(name, args);
 
     return { error: `Unknown tool: ${name}` };
   } catch (error) {
@@ -821,72 +637,6 @@ async function handleTool(name: string, args: Record<string, unknown>): Promise<
 }
 
 // ========== Category Handlers ==========
-async function handleTmuxTool(name: string, args: Record<string, unknown>): Promise<unknown> {
-  const hasTmux = await commandExists('tmux');
-  if (!hasTmux) {
-    return { error: 'tmux is not installed' };
-  }
-
-  const target = sanitizeShellArg((args.target as string) || '');
-  const session = sanitizeShellArg((args.session as string) || '');
-
-  if (name === 'tmux_list_sessions') {
-    try {
-      const { stdout } = await execAsync('tmux list-sessions -F "#{session_name}:#{session_windows}:#{session_attached}:#{session_created}"');
-      return { sessions: stdout.trim().split('\n').filter(Boolean) };
-    } catch {
-      return { sessions: [], message: 'No tmux sessions' };
-    }
-  }
-  if (name === 'tmux_list_windows') {
-    const cmd = session ? `tmux list-windows -t "${session}" -F "#{window_index}:#{window_name}:#{window_active}"` : 'tmux list-windows -F "#{window_index}:#{window_name}:#{window_active}"';
-    const { stdout } = await execAsync(cmd);
-    return { windows: stdout.trim().split('\n').filter(Boolean) };
-  }
-  if (name === 'tmux_list_panes') {
-    const cmd = session
-      ? `tmux list-panes -t "${session}" -F "#{pane_id}:#{pane_current_command}:#{pane_pid}:#{pane_active}"`
-      : 'tmux list-panes -a -F "#{session_name}:#{pane_id}:#{pane_current_command}:#{pane_active}"';
-    const { stdout } = await execAsync(cmd);
-    return { panes: stdout.trim().split('\n').filter(Boolean) };
-  }
-  if (name === 'tmux_send_keys') {
-    const keys = sanitizeShellArg(args.keys as string);
-    if (!target) return { error: 'Target pane required' };
-    await execAsync(`tmux send-keys -t "${target}" "${keys}" Enter`);
-    return { success: true };
-  }
-  if (name === 'tmux_pane_capture') {
-    const lines = Math.min(Math.max((args.lines as number) || 100, 1), 10000);
-    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p -S -${lines}`);
-    return { content: stdout };
-  }
-  if (name === 'tmux_pane_search') {
-    const pattern = sanitizeShellArg(args.pattern as string);
-    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p | grep -i "${pattern}" || true`);
-    return { matches: stdout.trim().split('\n').filter(Boolean) };
-  }
-  if (name === 'tmux_pane_tail') {
-    const lines = Math.min(Math.max((args.lines as number) || 20, 1), 1000);
-    const { stdout } = await execAsync(`tmux capture-pane -t "${target}" -p | tail -n ${lines}`);
-    return { content: stdout };
-  }
-  if (name === 'tmux_pane_is_busy') {
-    const { stdout } = await execAsync(`tmux display-message -t "${target}" -p "#{pane_current_command}"`);
-    const cmd = stdout.trim();
-    return { busy: !['bash', 'zsh', 'fish', 'sh', 'dash'].includes(cmd), command: cmd };
-  }
-  if (name === 'tmux_pane_current_command') {
-    const { stdout } = await execAsync(`tmux display-message -t "${target}" -p "#{pane_current_command}"`);
-    return { command: stdout.trim() };
-  }
-  if (name === 'tmux_session_info') {
-    if (!session) return { error: 'Session name required' };
-    const { stdout } = await execAsync(`tmux display-message -t "${session}" -p "name:#{session_name},windows:#{session_windows},attached:#{session_attached},created:#{session_created}"`);
-    return { info: stdout.trim() };
-  }
-  return { error: `Unknown tmux tool: ${name}` };
-}
 
 async function handleLogTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   if (name === 'log_sources') {
@@ -2835,12 +2585,12 @@ async function handleMcpTool(name: string, args: Record<string, unknown>): Promi
 
     const parameters = schema.properties
       ? Object.entries(schema.properties).map(([name, prop]) => ({
-          name,
-          type: prop.type,
-          description: prop.description || '',
-          required: schema.required?.includes(name) || false,
-          enum: prop.enum
-        }))
+        name,
+        type: prop.type,
+        description: prop.description || '',
+        required: schema.required?.includes(name) || false,
+        enum: prop.enum
+      }))
       : [];
 
     return {
@@ -3774,6 +3524,130 @@ async function handleGenTool(name: string, args: Record<string, unknown>): Promi
   return { error: `Unknown gen tool: ${name}` };
 }
 
+// ========== Pushcut Handler ==========
+async function handlePushcutTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const baseUrl = 'https://api.pushcut.io';
+
+  // Helper to send notification
+  async function sendNotification(
+    notificationName: string,
+    payload: Record<string, unknown>
+  ): Promise<unknown> {
+    const encodedName = encodeURIComponent(notificationName);
+    const url = `${baseUrl}/${PUSHCUT_API_KEY}/notifications/${encodedName}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json() as { notificationId?: string; id?: string; message?: string };
+
+      if (response.ok) {
+        return {
+          success: true,
+          message: 'Notification sent',
+          notificationId: data.notificationId || data.id,
+          notification: notificationName
+        };
+      } else {
+        return { error: `Pushcut API error: ${JSON.stringify(data)}` };
+      }
+    } catch (error) {
+      return { error: `Failed to send notification: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  // pushcut_notify - Send simple notification
+  if (name === 'pushcut_notify') {
+    const title = args.title as string;
+    const text = args.text as string;
+    const notification = (args.notification as string) || PUSHCUT_DEFAULT_NOTIFICATION;
+
+    const payload: Record<string, unknown> = { title, text };
+    if (args.sound) payload.sound = args.sound;
+    if (args.image) payload.image = args.image;
+
+    return await sendNotification(notification, payload);
+  }
+
+  // pushcut_notify_actions - Send notification with actions
+  if (name === 'pushcut_notify_actions') {
+    const title = args.title as string;
+    const text = args.text as string;
+    const notification = (args.notification as string) || PUSHCUT_DEFAULT_NOTIFICATION;
+    const actions = args.actions as Array<{ name: string; url?: string; shortcut?: string; input?: string }>;
+
+    const payload: Record<string, unknown> = { title, text, actions };
+
+    return await sendNotification(notification, payload);
+  }
+
+  // pushcut_execute - Execute Shortcut via Automation Server
+  if (name === 'pushcut_execute') {
+    const shortcut = args.shortcut as string;
+    const input = args.input as string | undefined;
+    const device = args.device as string | undefined;
+
+    const url = `${baseUrl}/${PUSHCUT_API_KEY}/execute`;
+
+    const payload: Record<string, unknown> = { shortcut };
+    if (input) payload.input = input;
+    if (device) payload.device = device;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          message: `Shortcut "${shortcut}" executed`,
+          result: data
+        };
+      } else {
+        return { error: `Pushcut execute error: ${JSON.stringify(data)}` };
+      }
+    } catch (error) {
+      return { error: `Failed to execute shortcut: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  // pushcut_devices - List devices
+  if (name === 'pushcut_devices') {
+    const url = `${baseUrl}/${PUSHCUT_API_KEY}/devices`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          devices: data
+        };
+      } else {
+        return { error: `Pushcut API error: ${JSON.stringify(data)}` };
+      }
+    } catch (error) {
+      return { error: `Failed to get devices: ${error instanceof Error ? error.message : String(error)}` };
+    }
+  }
+
+  return { error: `Unknown pushcut tool: ${name}` };
+}
+
 // ========== Resource Handler ==========
 async function handleResource(uri: string): Promise<string> {
   // Git Resources
@@ -3978,9 +3852,9 @@ Please:
 1. Use git_diff to see unstaged changes
 2. Use git_staged_diff to see staged changes
 3. Analyze for: ${args.focus === 'security' ? 'security vulnerabilities, exposed secrets, unsafe operations' :
-          args.focus === 'performance' ? 'performance issues, inefficient code patterns' :
-          args.focus === 'style' ? 'code style, formatting, naming conventions' :
-          'security, performance, style, and best practices'}
+            args.focus === 'performance' ? 'performance issues, inefficient code patterns' :
+              args.focus === 'style' ? 'code style, formatting, naming conventions' :
+                'security, performance, style, and best practices'}
 4. Provide specific recommendations for improvements`
       }
     });
@@ -4065,10 +3939,10 @@ Please:
 1. Use github_pr_get to fetch PR details
 2. Use github_pr_files to list changed files
 3. Analyze changes for: ${args.focus === 'code' ? 'code quality, logic errors, best practices' :
-          args.focus === 'tests' ? 'test coverage, test quality, edge cases' :
-          args.focus === 'docs' ? 'documentation accuracy, completeness, clarity' :
-          args.focus === 'security' ? 'security vulnerabilities, unsafe patterns' :
-          'code quality, tests, docs, and security'}
+            args.focus === 'tests' ? 'test coverage, test quality, edge cases' :
+              args.focus === 'docs' ? 'documentation accuracy, completeness, clarity' :
+                args.focus === 'security' ? 'security vulnerabilities, unsafe patterns' :
+                  'code quality, tests, docs, and security'}
 4. Provide specific feedback and suggestions`
       }
     });
@@ -4187,8 +4061,8 @@ Please:
 Please create a checklist including:
 1. Pre-deployment checks (tests, build, dependencies)
 2. ${args.environment === 'production' ? 'Production-specific: backup, maintenance window, rollback plan' :
-          args.environment === 'staging' ? 'Staging-specific: test data, integration tests' :
-          'Development-specific: local environment setup'}
+            args.environment === 'staging' ? 'Staging-specific: test data, integration tests' :
+              'Development-specific: local environment setup'}
 3. Deployment steps
 4. Post-deployment verification
 5. Monitoring and alerting checks`
