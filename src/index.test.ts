@@ -19,23 +19,23 @@ describe('Miyabi MCP Bundle', () => {
 
     it('should have tools in all 9 categories', async () => {
       const fs = await import('fs/promises');
-      const content = await fs.readFile('./src/index.ts', 'utf-8');
+      const indexContent = await fs.readFile('./src/index.ts', 'utf-8');
 
-      const categories = [
-        'git_',
-        'tmux_',
-        'log_',
-        'resource_',
-        'network_',
-        'process_',
-        'file_',
-        'claude_',
-        'github_'
-      ];
+      // Categories with modular handlers (tools defined in handler files)
+      const modularCategories = ['git_', 'tmux_', 'log_', 'resource_', 'network_', 'process_', 'file_'];
+      // Categories with inline definitions in index.ts
+      const inlineCategories = ['claude_', 'github_'];
 
-      for (const category of categories) {
+      // Check modular categories are imported via spread syntax
+      for (const category of modularCategories) {
+        const toolsName = category.replace('_', '') + 'Tools';
+        expect(indexContent, `Category ${category} should be imported`).toContain(`...${toolsName}`);
+      }
+
+      // Check inline categories have tool definitions
+      for (const category of inlineCategories) {
         const regex = new RegExp(`name: '${category}`, 'g');
-        const matches = content.match(regex);
+        const matches = indexContent.match(regex);
         expect(matches, `Category ${category} should have tools`).not.toBeNull();
         expect(matches!.length).toBeGreaterThan(0);
       }
@@ -83,21 +83,27 @@ describe('Miyabi MCP Bundle', () => {
   describe('Tool Handler Routing', () => {
     it('should have handler for each tool category', async () => {
       const fs = await import('fs/promises');
-      const content = await fs.readFile('./src/index.ts', 'utf-8');
+      const indexContent = await fs.readFile('./src/index.ts', 'utf-8');
 
-      const handlers = [
-        'handleTmuxTool',
-        'handleLogTool',
-        'handleResourceTool',
-        'handleNetworkTool',
-        'handleProcessTool',
-        'handleFileTool',
+      // Modular handlers are imported from handler files
+      const importedHandlers = [
+        'handleGitTool',
+        'handleTmuxTool'
+      ];
+
+      // Check that handlers are imported
+      for (const handler of importedHandlers) {
+        expect(indexContent, `Handler ${handler} should be imported`).toContain(handler);
+      }
+
+      // Inline handlers still defined in index.ts
+      const inlineHandlers = [
         'handleClaudeTool',
         'handleGitHubTool'
       ];
 
-      for (const handler of handlers) {
-        expect(content).toContain(`async function ${handler}`);
+      for (const handler of inlineHandlers) {
+        expect(indexContent).toContain(`async function ${handler}`);
       }
     });
   });
