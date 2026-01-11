@@ -109,8 +109,8 @@ export async function handleNetworkTool(name: string, args: Record<string, unkno
     }
     if (name === 'network_overview') {
         // Aggregate multiple checks (cached)
-        const interfaces = await handleNetworkTool('network_interfaces', {}) as any;
-        const gateway = await handleNetworkTool('network_gateway', {}) as any;
+        const interfaces = await handleNetworkTool('network_interfaces', {}) as { interfaces?: string };
+        const gateway = await handleNetworkTool('network_gateway', {}) as { gateway?: string };
         return {
             interfaces: interfaces.interfaces || interfaces,
             gateway: gateway.gateway || gateway
