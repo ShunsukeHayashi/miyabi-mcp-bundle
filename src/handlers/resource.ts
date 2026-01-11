@@ -2,8 +2,6 @@
 import * as si from 'systeminformation';
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { sharedCache as cache } from '../utils/shared-cache.js';
-import { validateInputLength, sanitizeShellArg, isValidHostname } from '../utils/security.js';
-import { MAX_HOSTNAME_LENGTH } from '../constants.js';
 
 export const resourceTools: Tool[] = [
     {

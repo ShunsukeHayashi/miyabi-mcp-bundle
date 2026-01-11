@@ -71,11 +71,11 @@ import { handleBridgeSend, handleBridgeReceive, handleBridgeContextShare, handle
 import { handleContextStore, handleContextGet, handleContextList, handleContextExpire, handleContextShare, handleContextSearch } from './handlers/context.js';
 import { gitTools, handleGitTool } from './handlers/git.js';
 import { tmuxTools, handleTmuxTool } from './handlers/tmux.js';
-import { networkTools, handleNetworkTool } from './handlers/network.js';
-import { logTools, handleLogTool } from './handlers/log.js';
-import { resourceTools, handleResourceTool } from './handlers/resource.js';
-import { processTools, handleProcessTool } from './handlers/process.js';
-import { fileTools, handleFileTool } from './handlers/file.js';
+import { networkTools } from './handlers/network.js';
+import { logTools } from './handlers/log.js';
+import { resourceTools } from './handlers/resource.js';
+import { processTools } from './handlers/process.js';
+import { fileTools } from './handlers/file.js';
 
 const execAsync = promisify(exec);
 const dnsLookup = promisify(dns.lookup);
@@ -131,56 +131,19 @@ const tools: Tool[] = [
   ...tmuxTools,
 
   // === Log Aggregator (7 tools) ===
-  { name: 'log_sources', description: 'List available log files in configured directory. Discover logs to analyze.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'log_get_recent', description: 'Get recent log entries with optional filtering by source and time window.', inputSchema: { type: 'object', properties: { source: { type: 'string', description: 'Log source name (partial match)' }, limit: { type: 'number', description: 'Max entries to return' }, minutes: { type: 'number', description: 'Only logs from last N minutes' } } } },
-  { name: 'log_search', description: 'Search logs for a pattern (case-insensitive). Find specific events or errors.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query (case-insensitive)' }, source: { type: 'string', description: 'Filter by log source' } }, required: ['query'] } },
-  { name: 'log_get_errors', description: 'Get error-level log entries. Quick way to find issues and exceptions.', inputSchema: { type: 'object', properties: { minutes: { type: 'number', description: 'Only errors from last N minutes' } } } },
-  { name: 'log_get_warnings', description: 'Get warning-level log entries. Find potential issues before they become errors.', inputSchema: { type: 'object', properties: { minutes: { type: 'number', description: 'Only warnings from last N minutes' } } } },
-  { name: 'log_tail', description: 'Get last N lines from a log file. Monitor recent activity in real-time.', inputSchema: { type: 'object', properties: { source: { type: 'string', description: 'Log source name' }, lines: { type: 'number', description: 'Number of lines to retrieve' } }, required: ['source'] } },
-  { name: 'log_stats', description: 'Get log file statistics including size, line count, and error frequency.', inputSchema: { type: 'object', properties: {} } },
+  ...logTools,
 
   // === Resource Monitor (10 tools) ===
-  { name: 'resource_cpu', description: 'Get CPU usage percentage (overall and per-core). Monitor system performance.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_memory', description: 'Get RAM and swap memory usage. Check available memory and identify leaks.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_disk', description: 'Get disk space usage for mounted filesystems. Monitor storage capacity.', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'Specific mount point to check' } } } },
-  { name: 'resource_load', description: 'Get system load average (1, 5, 15 min). Assess system stress over time.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_overview', description: 'Get comprehensive system overview: CPU, memory, disk, and top processes.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_processes', description: 'Get top processes sorted by CPU or memory usage. Find resource hogs (default: 10).', inputSchema: { type: 'object', properties: { sort: { type: 'string', enum: ['cpu', 'memory'], description: 'Sort by cpu or memory' }, limit: { type: 'number', description: 'Max processes to return (default: 10)' } } } },
-  { name: 'resource_uptime', description: 'Get system uptime and boot timestamp. Check how long system has been running.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_network_stats', description: 'Get network interface traffic statistics (RX/TX bytes, packets, errors).', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_battery', description: 'Get laptop battery status, charge level, and time remaining.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'resource_temperature', description: 'Get CPU and system temperatures. Monitor for thermal throttling.', inputSchema: { type: 'object', properties: {} } },
+  ...resourceTools,
 
   // === Network Inspector (15 tools) ===
   ...networkTools,
 
   // === Process Inspector (14 tools) ===
-  { name: 'process_info', description: 'Get detailed info about a process by PID: CPU, memory, command, and status.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_list', description: 'List running processes with CPU/memory usage. Sort by cpu, memory, pid, or name.', inputSchema: { type: 'object', properties: { sort: { type: 'string', description: 'Sort by: cpu, memory, pid, name' }, limit: { type: 'number', description: 'Max processes to return' } } } },
-  { name: 'process_search', description: 'Find processes by name or command line. Locate running services or apps.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query (name or command)' } }, required: ['query'] } },
-  { name: 'process_tree', description: 'Get process hierarchy showing parent-child relationships. Understand process spawning.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'process_file_descriptors', description: 'List open files and sockets for a process. Debug file handle leaks (requires lsof).', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_environment', description: 'Get environment variables for a running process. Debug configuration issues.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_children', description: 'List child processes of a parent PID. Track spawned subprocesses.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Parent process ID' } }, required: ['pid'] } },
-  { name: 'process_top', description: 'Get top N processes by resource usage (default: 10). Quick system overview.', inputSchema: { type: 'object', properties: { limit: { type: 'number', description: 'Number of top processes (default: 10)' } } } },
-  { name: 'process_kill', description: 'Terminate a process by PID. Requires confirm=true for safety. Default signal: SIGTERM.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID to kill' }, signal: { type: 'string', enum: ['SIGTERM', 'SIGKILL', 'SIGINT'], description: 'Signal to send (default: SIGTERM)' }, confirm: { type: 'boolean', description: 'Must be true to confirm kill' } }, required: ['pid', 'confirm'] } },
-  { name: 'process_ports', description: 'List network ports used by a process. Find what ports an app is listening on.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_cpu_history', description: 'Get CPU usage trend for a process. Monitor performance over time.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_memory_detail', description: 'Get detailed memory breakdown: RSS, virtual, shared. Debug memory issues.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_threads', description: 'List threads within a process. Analyze multi-threaded applications.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
-  { name: 'process_io_stats', description: 'Get disk I/O statistics for a process (Linux only). Diagnose I/O bottlenecks.', inputSchema: { type: 'object', properties: { pid: { type: 'number', description: 'Process ID' } }, required: ['pid'] } },
+  ...processTools,
 
   // === File Watcher (10 tools) ===
-  { name: 'file_stats', description: 'Get file metadata: size, permissions, modified time. Check file properties.', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'File or directory path' } }, required: ['path'] } },
-  { name: 'file_recent_changes', description: 'Find recently modified files. Track what changed in a time window.', inputSchema: { type: 'object', properties: { directory: { type: 'string', description: 'Directory to search' }, minutes: { type: 'number', description: 'Only files changed in last N minutes' }, limit: { type: 'number', description: 'Max files to return' }, pattern: { type: 'string', description: 'Glob pattern to filter (e.g., *.ts)' } } } },
-  { name: 'file_search', description: 'Find files matching glob pattern (e.g., **/*.json). Recursive by default.', inputSchema: { type: 'object', properties: { pattern: { type: 'string', description: 'Glob pattern (e.g., **/*.json)' }, directory: { type: 'string', description: 'Directory to search in' } }, required: ['pattern'] } },
-  { name: 'file_tree', description: 'Generate directory tree structure. Visualize folder hierarchy (default depth: 3).', inputSchema: { type: 'object', properties: { directory: { type: 'string', description: 'Root directory' }, depth: { type: 'number', description: 'Max depth (default: 3)' } } } },
-  { name: 'file_compare', description: 'Compare two files: size, timestamps, and content hash. Detect differences.', inputSchema: { type: 'object', properties: { path1: { type: 'string', description: 'First file path' }, path2: { type: 'string', description: 'Second file path' } }, required: ['path1', 'path2'] } },
-  { name: 'file_changes_since', description: 'List files modified after a timestamp. Track changes since a point in time.', inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'ISO timestamp (e.g., 2025-01-01T00:00:00Z)' }, directory: { type: 'string', description: 'Directory to search' }, pattern: { type: 'string', description: 'Glob pattern to filter' } }, required: ['since'] } },
-  { name: 'file_read', description: 'Read text file contents safely (max 100KB). Use maxLines to limit output.', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'File path to read' }, encoding: { type: 'string', description: 'Encoding (default: utf-8)' }, maxLines: { type: 'number', description: 'Max lines to read' } }, required: ['path'] } },
-  { name: 'file_checksum', description: 'Calculate file hash (MD5, SHA256, SHA512). Verify file integrity.', inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'File path' }, algorithm: { type: 'string', enum: ['md5', 'sha256', 'sha512'], description: 'Hash algorithm (default: sha256)' } }, required: ['path'] } },
-  { name: 'file_size_summary', description: 'Analyze directory size with breakdown by subdirectory. Find space usage.', inputSchema: { type: 'object', properties: { directory: { type: 'string', description: 'Directory to analyze' } } } },
-  { name: 'file_duplicates', description: 'Find duplicate files by content hash. Clean up redundant files.', inputSchema: { type: 'object', properties: { directory: { type: 'string', description: 'Directory to search' }, pattern: { type: 'string', description: 'Glob pattern to filter' } } } },
+  ...fileTools,
 
   // === Claude Code Monitor (8 tools) ===
   { name: 'claude_config', description: 'Get Claude Desktop configuration including MCP servers and settings.', inputSchema: { type: 'object', properties: {} } },

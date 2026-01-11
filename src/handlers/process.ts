@@ -181,7 +181,7 @@ export async function handleProcessTool(name: string, args: Record<string, unkno
         return { matches: stdout.trim().split('\n').filter(Boolean) };
     }
     if (name === 'process_tree') {
-        const hasPstree = await commandExists('pstree');
+        const hasPstree = await commandExists('pstree', execAsync);
         if (hasPstree) {
             const { stdout } = await execAsync('pstree -p 2>/dev/null || pstree');
             return { tree: stdout };

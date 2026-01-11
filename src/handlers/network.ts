@@ -5,12 +5,10 @@ import { promisify } from 'util';
 import dns from 'dns';
 import { platform } from 'os';
 
-import { sanitizeShellArg } from '../utils/security.js';
-import { isValidHostname } from '../utils/validation.js';
+import { sanitizeShellArg, isValidHostname } from '../utils/security.js';
 import { sharedCache as cache } from '../utils/shared-cache.js';
 
 const execAsync = promisify(exec);
-const dnsLookup = promisify(dns.lookup);
 const dnsResolve4 = promisify(dns.resolve4);
 const dnsResolve6 = promisify(dns.resolve6);
 
