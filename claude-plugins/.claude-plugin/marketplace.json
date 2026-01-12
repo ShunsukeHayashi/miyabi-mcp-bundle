@@ -1,49 +1,68 @@
 {
   "name": "miyabi-plugins",
   "owner": {
-    "name": "ShunsukeHayashi",
+    "name": "Shunsuke Hayashi",
     "email": "supernovasyun@gmail.com"
+  },
+  "metadata": {
+    "description": "Miyabi Plugin Suite - Complete autonomous AI development operations platform"
   },
   "plugins": [
     {
       "name": "miyabi-full",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-full",
-      "description": "Miyabi 完全パッケージ - 完全自律型AI開発オペレーションプラットフォーム"
+      "source": "./miyabi-full",
+      "description": "Miyabi 完全パッケージ - 完全自律型AI開発オペレーションプラットフォーム",
+      "version": "2.1.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-business-agents",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-business-agents",
-      "description": "16 Business Agents for marketing, sales, content, and analytics automation"
+      "source": "./miyabi-business-agents",
+      "description": "16 Business Agents for marketing, sales, content, and analytics automation",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-coding-agents",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-coding-agents",
-      "description": "9 Coding Agents for automated software development"
+      "source": "./miyabi-coding-agents",
+      "description": "9 Coding Agents for automated software development",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-commands",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-commands",
-      "description": "50+ Slash Commands for development automation"
+      "source": "./miyabi-commands",
+      "description": "50+ Slash Commands for development automation",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-guardian",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-guardian",
-      "description": "Guardian Agent - 手動エスカレーション・クリティカル障害対応"
+      "source": "./miyabi-guardian",
+      "description": "Guardian Agent - 手動エスカレーション・クリティカル障害対応",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-honoka",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-honoka",
-      "description": "穂花(ほのか) - Udemy コース作成＆コンテンツ販売の専門 Agent"
+      "source": "./miyabi-honoka",
+      "description": "穂花(ほのか) - Udemy コース作成＆コンテンツ販売の専門 Agent",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-hooks",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-hooks",
-      "description": "Pre/Post Tool Hooks for automated workflows"
+      "source": "./miyabi-hooks",
+      "description": "Pre/Post Tool Hooks for automated workflows",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     },
     {
       "name": "miyabi-skills",
-      "source": "/Users/shunsukehayashi/dev/miyabi-mcp-bundle/claude-plugins/miyabi-skills",
-      "description": "22 Development Skills for Rust, TDD, Git, Security, Performance, and more"
+      "source": "./miyabi-skills",
+      "description": "22 Development Skills for Rust, TDD, Git, Security, Performance, and more",
+      "version": "1.0.0",
+      "author": { "name": "Shunsuke Hayashi" }
     }
   ]
 }
